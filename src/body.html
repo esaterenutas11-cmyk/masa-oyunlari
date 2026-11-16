@@ -1,0 +1,65 @@
+<div id="home" class="screen on">
+  <div class="homeWrap">
+    <h1 class="logo">KIRAATHANE<small>PİŞTİ · BATAK · OKEY · 101 — 3D ONLINE MASA</small></h1>
+    <div class="panel profile">
+      <input id="myName" maxlength="14" placeholder="Adın" style="width:170px">
+      <div class="avs" id="avs"></div>
+    </div>
+    <div class="games" id="games"></div>
+    <div class="homeBtns">
+      <button id="bHost" class="green">🌐 Online Oda Kur</button>
+      <button id="bSolo">🤖 Botlarla Oyna</button>
+    </div>
+    <div class="joinRow">
+      <input id="joinCode" maxlength="4" placeholder="KOD">
+      <button id="bJoin" class="ghost">🔑 Odaya Katıl</button>
+    </div>
+    <p class="muted" style="text-align:center">Oda kuran kodu arkadaşlarına söyler, onlar “Odaya Katıl”a yazar. Boş koltuklara bot oturur. Hiçbir şey kurulmaz, tarayıcıda çalışır.</p>
+  </div>
+</div>
+
+<div id="lobby" class="screen">
+  <div class="lobWrap">
+    <div class="panel codeBox">
+      <div class="muted" id="lobTitle">Oda kodu</div>
+      <div class="code" id="lobCode">––––</div>
+      <div class="muted" id="lobSt">Bağlanılıyor…</div>
+    </div>
+    <div class="seats" id="seats"></div>
+    <div class="panel">
+      <div class="optRow" id="lobGame"></div>
+      <div class="optRow" id="lobOpts" style="margin-top:10px"></div>
+    </div>
+    <div class="panel lobChat">
+      <div id="lchatLog"></div>
+      <div class="optRow"><input id="lchatIn" maxlength="120" placeholder="Mesaj yaz…" style="flex:1"><button class="sm" id="lchatSend">Gönder</button></div>
+    </div>
+    <div class="homeBtns">
+      <button id="bStart" class="green">▶ Oyunu Başlat</button>
+      <button id="bLeave" class="red">Odadan Çık</button>
+    </div>
+    <div id="netDiag"></div>
+  </div>
+</div>
+
+<div id="table" class="screen">
+  <div id="stage"><div id="boardWrap"><div id="board"></div></div></div>
+  <div id="info"></div>
+  <div id="log"></div>
+  <div id="topbar">
+    <button class="sm ghost" id="bChat">💬</button>
+    <button class="sm ghost" id="bSound">🔊</button>
+    <button class="sm ghost" id="bScore">📊</button>
+    <button class="sm red" id="bExit">✕</button>
+  </div>
+  <div id="plates"></div>
+  <div id="status"></div>
+  <div id="actions"></div>
+  <div id="rackWrap"><div id="rackInfo"></div><div id="rack"><div class="rrow" id="row0"></div><div class="rrow" id="row1"></div></div></div>
+  <div id="chat"><div id="chatLog"></div><div class="emos" id="emos"></div><div class="optRow"><input id="chatIn" maxlength="120" placeholder="Mesaj…" style="flex:1;padding:7px"><button class="sm" id="chatSend">➤</button></div></div>
+</div>
+
+<div class="modal" id="mSum"><div class="panel"><h2 id="sumT"></h2><div id="sumB"></div><div class="homeBtns" style="margin-top:14px" id="sumBtns"></div></div></div>
+<div class="modal" id="mMsg"><div class="panel"><h2 id="msgT"></h2><p id="msgB" style="text-align:center;line-height:1.5"></p><div class="homeBtns" style="margin-top:14px"><button id="msgOk">Tamam</button></div></div></div>
+<div id="toast"></div>
+<div id="big"></div>
