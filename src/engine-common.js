@@ -35,12 +35,11 @@ function validGroup(ids, x) {
   }
   // seri: aynı renk ardışık
   if (R.length >= 1 && R.every(r => r.c === R[0].c) && new Set(R.map(r => r.n)).size === R.length && L <= 13) {
-    for (const hi of [false, true]) {
-      if (hi && !R.some(r => r.n === 1)) continue;
-      const nums = R.map(r => (r.n === 1 && hi) ? 14 : r.n);
+    for (const hi of [false]) { // 12-13-1 geçerli değil: 1 sadece serinin başında
+      const nums = R.map(r => r.n);
       const mn = Math.min(...nums), mx = Math.max(...nums);
       if (mx - mn + 1 - R.length > W.length) continue;
-      const maxEnd = (mn === 1) ? 13 : 14;
+      const maxEnd = 13;
       let s = Math.min(mn, maxEnd - L + 1);
       if (s < Math.max(1, mx - L + 1)) continue;
       const order = []; let wi = 0, value = 0;
@@ -95,7 +94,6 @@ function solveGroups(ids, x, obj) {
       return out;
     };
     chain(1, t.n);
-    if (t.n === 1) chain(-1, 14); // 12-13-1
     memo.set(key, best); return best;
   }
   const r = rec((1 << N) - 1, wild.length);
@@ -122,7 +120,7 @@ function tileUse(id, hand, x) {
   for (const o of hand) { if (o === id) continue; if (isWild(o, x)) continue; const f = effT(o, x);
     if (f.c === e.c && f.n === e.n) u += 2;
     else if (f.n === e.n) u += 3;
-    else if (f.c === e.c) { const d = Math.abs(f.n - e.n); if (d === 1 || d === 12) u += 4; else if (d === 2 || d === 11) u += 2; } }
+    else if (f.c === e.c) { const d = Math.abs(f.n - e.n); if (d === 1) u += 4; else if (d === 2) u += 2; } }
   return u;
 }
 function handQuality(hand, x) {
