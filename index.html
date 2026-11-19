@@ -161,6 +161,9 @@ a.dl{display:inline-block;padding:10px 16px;border-radius:10px;background:#fffff
 .plate .tm{font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;background:#ffffff22}
 .plate .clock{position:absolute;top:-8px;right:-6px;background:#c62828;color:#fff;font-weight:800;font-size:12px;border-radius:12px;padding:2px 7px;box-shadow:0 2px 6px #0008}
 .plate .clock.ok{background:#2e7d32}
+
+.seat.sit{cursor:pointer;transition:background .2s}.seat.sit:hover{background:#7fd88e22;border-color:#7fd88e}
+.seat.sit button{margin-top:6px}.seat.me{box-shadow:0 0 0 2px #f7d77d,0 0 18px #f7d77d55}
 </style></head><body>
 <div id="home" class="screen on">
   <div class="homeWrap">
@@ -1147,9 +1150,12 @@ $('bExit').onclick = () => { if (APP.mode === 'solo' || confirm('Masadan çıkma
 /* ---- lobi ---- */
 function renderLobby() {
   const host = APP.mode === 'host', seats = APP.seats, E = GAMES[APP.game];
+  const mine = host ? 0 : APP.mySeatL; const pos = ['Alt (sen)', 'Sağ', 'Karşı', 'Sol'];
   $('seats').innerHTML = [0, 1, 2, 3].map(i => { const p = seats[i];
-    if (!p) return `<div class="seat"><div class="av">🪑</div><div class="nm">Boş</div><div class="tag">bot oturur</div></div>`;
-    return `<div class="seat full"><div class="av">${p.av}</div><div class="nm">${esc(p.name)}</div><div class="tag">${p.host ? 'Ev sahibi' : p.bot ? 'Bot' : 'Oyuncu'}</div>${host && i > 0 ? `<span class="x" data-i="${i}">✕</span>` : ''}</div>`; }).join('');
+    if (!p) return `<div class="seat sit" data-sit="${i}"><div class="av">🪑</div><div class="nm">Boş</div><div class="tag">başlarsa bot oturur</div><button class="sm green" data-sit="${i}">Otur</button></div>`;
+    const me = host ? !!p.local : i === mine;
+    return `<div class="seat full ${me ? 'me' : ''}"><div class="av">${p.av}</div><div class="nm">${esc(p.name)}${me ? ' (sen)' : ''}</div><div class="tag">${p.host ? 'Ev sahibi' : p.bot ? 'Bot' : 'Oyuncu'} · ${i + 1}. koltuk</div>${host && !p.local ? `<span class="x" data-i="${i}">✕</span>` : ''}</div>`; }).join('');
+  document.querySelectorAll('[data-sit]').forEach(e => e.onclick = ev => { ev.stopPropagation(); sitAt(+e.dataset.sit); });
   document.querySelectorAll('.seat .x').forEach(e => e.onclick = () => { const i = +e.dataset.i; const p = APP.seats[i]; if (p && p.peer) { APP.H.send(p.peer, { t: 'kicked' }); setTimeout(() => APP.H.kick(p.peer), 200); } APP.seats[i] = null; renderLobby(); hostLobbyBroadcast(); });
   $('lobGame').innerHTML = host ? GAME_ORDER.map(k => `<button class="sm ${k === APP.game ? '' : 'ghost'}" data-g="${k}">${GAMES[k].icon} ${GAMES[k].name}</button>`).join('') : `<b>Oyun:</b>&nbsp;${E.icon} ${E.name}`;
   if (host) document.querySelectorAll('#lobGame button').forEach(b => b.onclick = () => { APP.game = b.dataset.g; PICK = APP.game; LS.set('game', PICK); APP.opts = defOpts(APP.game); renderLobby(); hostLobbyBroadcast(); });
@@ -1166,14 +1172,26 @@ function optSel(k, label, vals, fmt) { const host = APP.mode === 'host'; const c
   return `<label>${label} <select data-k="${k}">${vals.map(v => `<option value="${v}" ${v === cur ? 'selected' : ''}>${fmt(v)}</option>`).join('')}</select></label>`; }
 function hostLobbyBroadcast() {
   if (APP.mode !== 'host' || !APP.H) return;
-  APP.seats.forEach((p, i) => { if (p && p.peer) APP.H.send(p.peer, { t: 'lobby', seats: pubSeats(), game: APP.game, opts: APP.opts, started: APP.started }); });
+  APP.seats.forEach((p, i) => { if (p && p.peer) APP.H.send(p.peer, { t: 'lobby', seats: pubSeats(), game: APP.game, opts: APP.opts, started: APP.started, you: i }); });
+}
+// boş koltuğa otur (yer değiştir)
+function sitAt(i) {
+  if (APP.mode === 'guest') { APP.C && APP.C.send({ t: 'sit', seat: i }); return; }
+  if (APP.mode !== 'host' || APP.started) return;
+  moveSeat(APP.seats.findIndex(p => p && p.local), i);
+}
+function moveSeat(from, to) {
+  if (from < 0 || to < 0 || to > 3 || from === to || APP.seats[to]) return false;
+  APP.seats[to] = APP.seats[from]; APP.seats[from] = null; renderLobby(); hostLobbyBroadcast(); snd('card'); return true;
 }
 $('bStart').onclick = () => {
   const E = GAMES[APP.game]; const n = APP.opts.players && E.players.includes(APP.opts.players) ? APP.opts.players : E.players[E.players.length - 1];
   const humans = APP.seats.filter(p => p && !p.bot);
   if (humans.length > n) return toast(`${E.name} en fazla ${n} kişi`);
-  const list = humans.map(p => ({ name: p.name, av: p.av, peer: p.peer, local: p.local, online: true }));
-  let b = 0; while (list.length < n) list.push({ ...BOTS[b++ % 3], bot: true });
+  const conv = p => ({ name: p.name, av: p.av, peer: p.peer, local: p.local, online: true });
+  let b = 0, list;
+  if (n === 4) list = APP.seats.map(p => p ? conv(p) : { ...BOTS[b++ % 3], bot: true }); // oturma düzeni korunur (eşlide karşılıklı = takım)
+  else { list = humans.map(conv); while (list.length < n) list.push({ ...BOTS[b++ % 3], bot: true }); }
   APP.players = list; APP.opts.players = n; startGame();
 };
 
@@ -1194,6 +1212,7 @@ function hostMsg(peer, m) {
     APP.seats[i] = { name, av, peer }; renderLobby(); hostLobbyBroadcast(); sysChat(`${name} odaya katıldı`); snd('ding'); return;
   }
   if (m.t === 'bye') { APP.H.kick(peer); return; }
+  if (m.t === 'sit') { if (APP.started) return; if (!moveSeat(APP.seats.findIndex(p => p && p.peer === peer), m.seat | 0)) APP.H.send(peer, { t: 'err', msg: 'O koltuk dolu' }); return; }
   if (m.t === 'chat') { const p = APP.players.find(x => x.peer === peer) || APP.seats.find(x => x && x.peer === peer); if (p) chatAll(p.name, String(m.text || '').slice(0, 120)); return; }
   if (m.t === 'act' && APP.started) {
     const i = APP.players.findIndex(p => p.peer === peer); if (i < 0) return;
@@ -1215,7 +1234,7 @@ function hostPing() {
 function guestMsg(m) {
   APP.lastHost = Date.now();
   if (m.t === 'ping') return;
-  if (m.t === 'lobby') { APP.seats = m.seats; APP.game = m.game; APP.opts = m.opts; if (!APP.started) { show('lobby'); renderLobby(); } return; }
+  if (m.t === 'lobby') { APP.seats = m.seats; APP.game = m.game; APP.opts = m.opts; APP.mySeatL = m.you; if (!APP.started) { show('lobby'); renderLobby(); $('lobSt').textContent = `${m.you + 1}. koltuktasın — istersen boş bir koltuğa “Otur” diyerek yer değiştir. Ev sahibinin başlatması bekleniyor.`; } return; }
   if (m.t === 'view') {
     APP.game = m.game; APP.players = m.players; APP.mySeat = m.you; APP.opts = m.opts || APP.opts;
     if (!APP.started) { APP.started = true; enterTable(); }
@@ -1236,7 +1255,7 @@ function sendAct(a) {
 
 /* ---- oyun döngüsü (ev sahibi / tek kişi) ---- */
 function startGame() {
-  const E = GAMES[APP.game]; APP.mySeat = 0; APP.started = true;
+  const E = GAMES[APP.game]; APP.mySeat = Math.max(0, APP.players.findIndex(p => p.local)); APP.started = true;
   APP.s = E.create(APP.opts, APP.players.length);
   enterTable(); hostChanged();
 }
@@ -1273,8 +1292,10 @@ function restartGame() { if (APP.mode === 'guest') return; APP.players.forEach(p
 function toLobby() {
   if (APP.mode === 'solo') return backHome();
   APP.started = false; clearTimeout(APP.timer); APP.s = null; $('mSum').classList.remove('on'); clearScene();
-  APP.seats = [APP.seats[0], ...APP.players.filter(p => p.peer && p.online !== false).map(p => ({ name: p.name, av: p.av, peer: p.peer }))];
-  while (APP.seats.length < 4) APP.seats.push(null);
+  const hostSeat = APP.seats.find(p => p && p.local) || { name: ME.name, av: ME.av, host: true, local: true };
+  APP.seats = [null, null, null, null];
+  APP.players.forEach((p, i) => { if (p.local) APP.seats[i] = hostSeat; else if (p.peer && p.online !== false) APP.seats[i] = { name: p.name, av: p.av, peer: p.peer }; });
+  if (!APP.seats.includes(hostSeat)) APP.seats[APP.seats.indexOf(null)] = hostSeat;
   for (const p of APP.players) if (p.peer && p.online !== false) APP.H.send(p.peer, { t: 'toLobby' });
   show('lobby'); renderLobby(); hostLobbyBroadcast();
 }
