@@ -83,8 +83,15 @@ $('bJoin').onclick = async () => {
   try {
     APP.C = await netJoin(code, { onMsg: guestMsg, onClose: () => { if (APP.mode === 'guest') { backHome(); msg('Bağlantı koptu', 'Ev sahibiyle bağlantı kesildi.'); } } });
     if (APP.mode !== 'guest') { APP.C.close(); return; }
-    APP.C.send({ t: 'hello', name: ME.name, av: ME.av }); APP.lastHost = Date.now();
-    $('lobSt').textContent = 'Bağlandın! Ev sahibinin oyunu başlatması bekleniyor.';
+    APP.C.send({ t: 'hello', name: ME.name, av: ME.av }); APP.lastHost = Date.now(); APP.gotHost = false;
+    $('lobSt').textContent = 'Bağlandın, ev sahibinden onay bekleniyor…';
+    // ev sahibi cevap vermezse selamı tekrarla, yine olmazsa sunucu üzerinden bağlan
+    let tries = 0; const hi = setInterval(() => {
+      if (APP.mode !== 'guest' || APP.gotHost || !APP.C) { clearInterval(hi); return; }
+      tries++; if (tries === 3 && APP.C.forceRelay) { APP.C.forceRelay(); $('lobSt').textContent = 'Doğrudan bağlantı tek yönlü çalışıyor, sunucu üzerinden bağlanılıyor…'; }
+      APP.C.send({ t: 'hello', name: ME.name, av: ME.av });
+      if (tries >= 8) { clearInterval(hi); $('lobSt').textContent = 'Ev sahibi cevap vermiyor. Odadan çıkıp tekrar katılmayı dene.'; }
+    }, 3000);
     clearInterval(APP.pingT); APP.pingT = setInterval(() => { APP.C && APP.C.send({ t: 'ping' }); if (Date.now() - APP.lastHost > 25000 && APP.mode === 'guest') { backHome(); msg('Bağlantı koptu', 'Ev sahibinden 25 saniyedir haber yok.'); } }, 4000);
   } catch (e) { if (APP.mode === 'guest') { backHome(); msg('Katılamadın', esc(e.message || e)); } }
 };
@@ -185,6 +192,7 @@ function hostPing() {
 function guestMsg(m) {
   APP.lastHost = Date.now();
   if (m.t === 'ping') return;
+  APP.gotHost = true;
   if (m.t === 'lobby') { APP.seats = m.seats; APP.game = m.game; APP.opts = m.opts; APP.mySeatL = m.you; if (!APP.started) { show('lobby'); renderLobby(); $('lobSt').textContent = `${m.you + 1}. koltuktasın — istersen boş bir koltuğa “Otur” diyerek yer değiştir. Ev sahibinin başlatması bekleniyor.`; } return; }
   if (m.t === 'view') {
     APP.game = m.game; APP.players = m.players; APP.mySeat = m.you; APP.opts = m.opts || APP.opts;

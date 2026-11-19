@@ -86,7 +86,7 @@ async function netHost(code, cb) {
   sig.handlers.OFFER = async m => {
     const src = m.src; if (links.has(src)) return;
     const pc = new RTCPeerConnection({ iceServers: ice }); const L = { pc, dc: null, q: [] }; links.set(src, L);
-    pc.ondatachannel = e => { const dc = e.channel; dc.onopen = () => { attach(src, dc, pc); netDiag('link', 'doğrudan ✔'); }; };
+    pc.ondatachannel = e => { const dc = e.channel; attach(src, dc, pc); netDiag('link', 'doğrudan ✔'); };
     try {
       await pc.setRemoteDescription(m.payload.sdp); for (const c of L.q) pc.addIceCandidate(c).catch(() => { }); L.q = null;
       await pc.setLocalDescription(await pc.createAnswer()); await waitIce(pc, 5000);
@@ -102,7 +102,9 @@ async function netHost(code, cb) {
     }
     L.dc.onmessage && L.dc.onmessage({ data });
   };
-  H.send = (peer, obj) => { const L = links.get(peer); if (L && L.dc && L.dc.readyState === 'open') try { L.dc.send(NET_JSON(obj)); } catch (e) { } };
+  H.send = (peer, obj) => { const L = links.get(peer); if (!L || !L.dc) return; const msg = NET_JSON(obj);
+    if (L.dc.readyState === 'open') { try { L.dc.send(msg); } catch (e) { } }
+    else if (L.dc.readyState === 'connecting') { (L.pend = L.pend || []).push(msg); if (!L.dc._po) { L.dc._po = 1; L.dc.addEventListener('open', () => { for (const m of L.pend.splice(0)) try { L.dc.send(m); } catch (e) { } }); } } };
   H.kick = peer => drop(peer);
   H.close = () => { H.closed = true; for (const p of [...links.keys()]) { const L = links.get(p); links.delete(p); try { L.pc && L.pc.close(); } catch (e) { } } sig.close(); };
   return H;
@@ -125,9 +127,11 @@ async function netJoin(code, cb) {
       const v = relayDC(sig, host); C.ch = v; wireCh(v); sig.onRelay = (src, data) => { if (src === host && v.onmessage) v.onmessage({ data }); };
       netDiag('link', 'sunucu üzerinden ✔'); res();
     };
-    dc.onopen = () => { if (done) return; done = true; wireCh(dc); netDiag('link', 'doğrudan ✔'); res(); };
+    wireCh(dc);
+    dc.onopen = () => { if (done) return; done = true; netDiag('link', 'doğrudan ✔'); res(); };
     pc.addEventListener('iceconnectionstatechange', () => { if (pc.iceConnectionState === 'failed') goRelay(); });
     relayTimer = () => setTimeout(goRelay, 6000);
+    C.forceRelay = () => { done = false; C.ch = null; const v = relayDC(sig, host); C.ch = v; wireCh(v); sig.onRelay = (src, data) => { if (src === host && v.onmessage) v.onmessage({ data }); }; try { dc.onclose = null; dc.onmessage = null; pc.close(); } catch (e) { } netDiag('link', 'sunucu üzerinden ✔'); done = true; };
     setTimeout(() => { if (!done) rej({ message: gotAnswer ? 'Ev sahibi bulundu ama bağlantı kurulamadı.' : 'Bu kodda açık oda bulunamadı. Kodu kontrol et; ev sahibinin oda ekranı açık olmalı.' }); }, 25000);
   });
   await pc.setLocalDescription(await pc.createOffer()); await waitIce(pc, 5000);
