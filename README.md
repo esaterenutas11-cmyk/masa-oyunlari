@@ -7,16 +7,18 @@ Tarayıcıda çalışan, kurulum gerektirmeyen 3D masa oyunları. 4 kişiye kada
 ## Oyunlar
 | Oyun | Kişi | Özet |
 |---|---|---|
-| 💯 101 Okey | 4 | 101 ile seri açma / 5 çift açma, işleme, işlek taş & okey atma cezası, elden/okeyle bitirme katları |
-| 🀄 Okey | 4 | 14 taşı per ya da 7 çift yap, 15. taşla bitir (okeyle / çiftten bitirme ×2) |
-| ♠️ Batak | 4 | İhaleli, koz seçimi, renk takip + yükseltme + koz çakma zorunluluğu |
-| 🃏 Pişti | 2 / 4 | Pişti 10, vale pişti 20, kart çoğunluğu 3, as/vale 1, ♣2 = 2, ♦10 = 3 |
+| 💯 101 Okey | 4 | Katlamalı/katlamasız açış, çift açma, işleme, okey alma, siler, işlek taş & okey cezası, elden bitme |
+| 🀄 Okey | 4 | 20'den düşme puanlama, gösterge, okeyle / çiftten bitirme |
+| ♠️ Batak | 4 | İhaleli, Eşli ihaleli, Koz Maça · Onluk (×10) ya da basit puanlama |
+| 🃏 Pişti | 2 / 4 | Tekli ya da eşli, pişti 10, vale piştisi 20 |
+
+📖 **Tüm kurallar:** [KURALLAR.md](KURALLAR.md) (oyunda da 📖 düğmesiyle açılır ve indirilebilir)
 
 ## Nasıl oynanır
 1. Adını yaz, oyunu seç.
 2. **Online Oda Kur** → çıkan 4 harfli kodu arkadaşlarına söyle.
 3. Arkadaşların kodu yazıp **Odaya Katıl** der.
-4. **Oyunu Başlat** — eksik koltuklara bot oturur. Biri koparsa yerine bot oynar, aynı isimle tekrar girince koltuğunu geri alır.
+4. Lobide oyun ayarlarını ve **hamle süresini** seç, **Oyunu Başlat** — eksik koltuklara bot oturur. Biri koparsa yerine bot oynar, aynı isimle tekrar girince koltuğunu geri alır.
 
 **Okey ıstakası:** taşları sürükleyip diz, tıklayarak seç, çift tıklayarak at. 101'de yan yana dizilmiş perler "Seri Aç" ile açılır; masadaki pere işlemek için taşı seçip pere tıkla.
 

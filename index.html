@@ -150,6 +150,17 @@ body.cardsMode #actions{bottom:auto;top:42%;transform:translate(-50%,-50%)}
 body.tilesMode #actions{bottom:196px}
 body.tilesMode #status{bottom:240px}
 body.tilesMode .p0{bottom:200px}
+
+.rulesPanel{width:min(820px,96vw)}
+.rtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+#rBody{font-size:14.5px;line-height:1.55;max-height:64vh;overflow:auto;padding-right:6px}
+#rBody h3{font:700 24px Georgia,serif;color:#f7d77d;margin:4px 0 8px}#rBody h4{color:#f7d77d;margin:14px 0 6px;font-size:16px}
+#rBody ul{padding-left:20px;margin:4px 0}#rBody li{margin:3px 0}#rBody p{margin:6px 0}
+table.rtbl{border-collapse:collapse;margin:8px 0;width:100%;font-size:13.5px}table.rtbl td,table.rtbl th{border:1px solid #ffffff22;padding:6px 8px;text-align:left}table.rtbl th{background:#f7d77d22;color:#f7d77d}
+a.dl{display:inline-block;padding:10px 16px;border-radius:10px;background:#ffffff14;color:#f3ead7;text-decoration:none;font-weight:600;box-shadow:inset 0 0 0 1px #ffffff2a}
+.plate .tm{font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;background:#ffffff22}
+.plate .clock{position:absolute;top:-8px;right:-6px;background:#c62828;color:#fff;font-weight:800;font-size:12px;border-radius:12px;padding:2px 7px;box-shadow:0 2px 6px #0008}
+.plate .clock.ok{background:#2e7d32}
 </style></head><body>
 <div id="home" class="screen on">
   <div class="homeWrap">
@@ -162,6 +173,7 @@ body.tilesMode .p0{bottom:200px}
     <div class="homeBtns">
       <button id="bHost" class="green">🌐 Online Oda Kur</button>
       <button id="bSolo">🤖 Botlarla Oyna</button>
+      <button id="bRulesHome" class="ghost">📖 Kurallar</button>
     </div>
     <div class="joinRow">
       <input id="joinCode" maxlength="4" placeholder="KOD">
@@ -200,6 +212,7 @@ body.tilesMode .p0{bottom:200px}
   <div id="info"></div>
   <div id="log"></div>
   <div id="topbar">
+    <button class="sm ghost" id="bRules" title="Kurallar">📖</button>
     <button class="sm ghost" id="bChat">💬</button>
     <button class="sm ghost" id="bSound">🔊</button>
     <button class="sm ghost" id="bScore">📊</button>
@@ -214,11 +227,13 @@ body.tilesMode .p0{bottom:200px}
 
 <div class="modal" id="mSum"><div class="panel"><h2 id="sumT"></h2><div id="sumB"></div><div class="homeBtns" style="margin-top:14px" id="sumBtns"></div></div></div>
 <div class="modal" id="mMsg"><div class="panel"><h2 id="msgT"></h2><p id="msgB" style="text-align:center;line-height:1.5"></p><div class="homeBtns" style="margin-top:14px"><button id="msgOk">Tamam</button></div></div></div>
+<div class="modal" id="mRules"><div class="panel rulesPanel"><div class="rtabs" id="rTabs"></div><div id="rBody"></div><div class="homeBtns" style="margin-top:12px"><a class="dl" id="rDl" download="KIRAATHANE-Kurallar.md">⬇ Kuralları indir</a><button id="rClose">Kapat</button></div></div></div>
 <div id="toast"></div>
 <div id="big"></div>
 
 <script>
 "use strict";
+const RULES_HTML={"okey101": "<h3>💯 101 Okey</h3>\n<p><b>Oyuncu:</b> 4 kişi · <b>Taş:</b> 106 (1–13 arası, 4 renk, her taştan 2 tane + 2 sahte okey) · <b>Kazanan:</b> oyun sonunda <b>en düşük</b> puana sahip olan.</p>\n<h4>Dağıtım, gösterge ve okey</h4>\n<ul>\n<li>Her oyuncuya 21 taş dağıtılır; oyunu başlatan oyuncu 22 taş alır ve ilk hamlesi taş atmaktır.</li>\n<li>Ortadan bir taş açılır: <b>gösterge</b>. Göstergeyle aynı renkte ve bir büyük sayıdaki taş o elin <b>okeyidir</b> (joker). Gösterge 13 ise okey aynı rengin 1'idir.</li>\n<li>Okey her taşın yerine geçebilir. <b>Sahte okey (★)</b> joker değildir; sadece o elin okey taşının yerine (rengi ve sayısıyla) kullanılır.</li>\n<li>Oyun saat yönünün tersine döner; her el başlatan oyuncu bir sağa kayar.</li>\n</ul>\n<h4>Perler</h4>\n<ul>\n<li><b>Seri:</b> aynı renkte en az 3 ardışık taş (ör. kırmızı 4-5-6). <b>1 sadece serinin başında olabilir; 12-13-1 geçersizdir.</b> Seri iki ucundan uzatılabilir.</li>\n<li><b>Küt (aynı sayı):</b> aynı sayının farklı renklerinden 3 ya da 4 taş. Aynı renk iki kez olamaz.</li>\n<li><b>Çift:</b> aynı renk ve sayıdan iki taş (biri okey olabilir). Çiftler uzatılamaz.</li>\n</ul>\n<h4>Sıra</h4>\n<ul>\n<li><b>Çek:</b> ortadan bir taş çek ya da solundaki oyuncunun son attığı taşı al.</li>\n<li><b>Aç / indir / işle</b> (isteğe bağlı).</li>\n<li><b>At:</b> bir taş at. Her tur, son tur dahil, taş atarak biter; elindeki bütün taşları yere indirip atmadan bitiremezsin.</li>\n</ul>\n<h4>El açmak</h4>\n<ul>\n<li><b>Seriden açma:</b> aynı turda yere indirdiğin perlerin toplamı en az <b>101</b> olmalı. Taşlar üzerindeki sayı kadar sayılır, okey yerine geçtiği taşın değerini alır.</li>\n<li><b>Çiftten açma:</b> aynı turda en az <b>5 çift</b> indirirsin; sayıların önemi yoktur.</li>\n<li><b>Katlamalı (varsayılan):</b> her yeni açış bir öncekini geçmelidir. Biri 120 ile açtıysa sonraki seriden açış en az 121, biri 6 çiftle açtıysa sonraki çift açış en az 7 çift olmalı. Seri ve çift ayrı sayılır. <b>Katlamasız</b> modda sınır hep 101 / 5 çifttir.</li>\n<li>Seriden açan sonra çift indiremez. Çiftten açan yeni seri/küt kuramaz ama masadaki perlere taş işleyebilir ve yeni çift indirebilir.</li>\n<li><b>Siler (varsayılan açık):</b> 150 ve üzeri seriyle ya da 7 ve üzeri çiftle açan oyuncu <b>−101 ödül</b> alır.</li>\n</ul>\n<h4>Yandan taş almak</h4>\n<ul>\n<li>Soldan aldığın taşı <b>aynı turda kullanmak zorundasın</b> (açarken ya da açtıysan per/işleme olarak). Elde tutamazsın.</li>\n<li>Kullanamazsan hiçbir şey indirmeden <b>geri verebilir</b> ve ortadan çekebilirsin; cezası yoktur. Yere taş indirdikten sonra geri verirsen <b>101 ceza</b> yazılır.</li>\n<li><b>Yere atılan okey alınamaz.</b></li>\n</ul>\n<h4>İşlemek ve okey almak</h4>\n<ul>\n<li>Elini açtıktan sonra masadaki herkesin perine uyan taşları ekleyebilirsin (seriye uç, kütte eksik renk).</li>\n<li><b>Okey alma:</b> masadaki bir perde okeyin yerine geçtiği gerçek taş sende varsa onu koyup okeyi eline alırsın. Kütlerde bu, 4 renk tamamlanmışsa olur. Okeyi o pere koyan başka bir oyuncuysa ona <b>101 ceza</b> yazılır.</li>\n</ul>\n<h4>Cezalar (her biri 101)</h4>\n<ul>\n<li><b>Okey atmak.</b></li>\n<li><b>İşlek taş atmak:</b> masadaki bir pere işlenebilecek taşı atmak (henüz açmamış olsan bile). Bitiriş taşı hariç.</li>\n<li>Okeyi masada başkasına aldırmak (yukarıda).</li>\n</ul>\n<h4>El sonu ve puanlama</h4>\n<p>Elini bitiren (son taşını atan) oyuncu <b>−101</b> alır. Diğerleri:</p>\n<table class=\"rtbl\"><tr><th>Durum</th><th>Açan oyuncu</th><th>Çiftten açan</th><th>Açamayan</th></tr><tr><td>Normal bitiş</td><td>eldeki taşların toplamı</td><td>toplam × 2</td><td>202</td></tr><tr><td>Okey atarak bitiş (bitiren −202)</td><td>toplam × 2</td><td>toplam × 4</td><td>404</td></tr><tr><td>Çiftten bitiş (bitiren −202)</td><td>toplam × 2</td><td>toplam × 4</td><td>404</td></tr><tr><td>Çiftten + okeyle bitiş (bitiren −404)</td><td>toplam × 4</td><td>toplam × 8</td><td>404</td></tr></table>\n<ul>\n<li>Elde kalan <b>okey 101</b> sayılır.</li>\n<li><b>Elden bitme:</b> daha kimse açmamışken bir oyuncu tek turda açıp bitirirse bitiren −202, diğer herkes <b>404</b> (okeyle bitirirse −404 / <b>808</b>).</li>\n<li><b>Deste biterse:</b> kimse açmadıysa o el yazılmaz. Açan varsa açamayanlara 202, açanlara elindeki taşlar yazılır; bitiren olmaz.</li>\n<li>Elde yazılan cezalar (okey atma, işlek taş, siler) o elin puanına eklenir.</li>\n<li>Belirlenen el sayısı oynanır, <b>toplamı en düşük olan kazanır.</b></li>\n</ul>\n<p><b>Oyundaki ayarlar:</b> El sayısı (1/3/5/7/9/11) · Katlamalı / Katlamasız · Siler açık/kapalı · Hamle süresi.</p>", "okey": "<h3>🀄 Okey (Düz Okey)</h3>\n<p><b>Oyuncu:</b> 4 kişi · <b>Taş:</b> 106 · <b>Kazanan:</b> puanı 0'a ilk düşen olunca, o an <b>en yüksek</b> puana sahip oyuncu.</p>\n<h4>Dağıtım</h4>\n<ul>\n<li>Herkese 14 taş; oyunu başlatan 15 taş alır ve ilk hamlesi taş atmaktır.</li>\n<li>Gösterge ve okey 101'deki gibidir (göstergenin bir üstü okey, 13'ün üstü 1). Sahte okey (★) okey taşının yerine geçer.</li>\n</ul>\n<h4>Sıra</h4>\n<ul>\n<li>Ortadan çek <b>ya da</b> solundakinin attığı son taşı al, sonra bir taş at. Atılan okey alınabilir.</li>\n<li>Ortada taş biterse el <b>berabere</b> biter, puan değişmez.</li>\n</ul>\n<h4>Bitirmek</h4>\n<ul>\n<li>15 taşın 14'ü perlere (seri ya da küt; <b>12-13-1 yok</b>) ya da <b>7 çifte</b> dizilmişken 15. taşı atarak bitirirsin. Perleri yere açmak yoktur, el bittiğinde gösterilir.</li>\n</ul>\n<h4>Puanlama (20'den düşme)</h4>\n<p>Herkes <b>20 puanla</b> başlar (ayar: 20/12/6). El bitince bitiren <b>dışındaki</b> herkesten düşülür:</p>\n<table class=\"rtbl\"><tr><th>Bitiş</th><th>Diğerlerinden düşülen</th></tr><tr><td>Normal</td><td>2</td></tr><tr><td>Okey atarak</td><td>4</td></tr><tr><td>Çiftten (7 çift)</td><td>4</td></tr><tr><td>Çiftten + okey atarak</td><td>8</td></tr></table>\n<ul>\n<li><b>Gösterge:</b> elinde göstergenin aynısı olan oyuncu ilk hamlesini yapmadan önce onu gösterirse diğer herkesten <b>1 puan</b> düşülür.</li>\n<li>Bir oyuncunun puanı 0 ya da altına inince oyun biter; en yüksek puanlı kazanır.</li>\n</ul>\n<p><b>Oyundaki ayarlar:</b> Başlangıç puanı (20/12/6) · Hamle süresi.</p>", "batak": "<h3>♠️ Batak</h3>\n<p><b>Oyuncu:</b> 4 kişi · <b>Deste:</b> 52 kart, as en büyük · <b>Kazanan:</b> belirlenen el sayısı sonunda en yüksek puan.</p>\n<h4>Modlar</h4>\n<ul>\n<li><b>İhaleli (tekli):</b> herkes kendi için oynar; ihaleyi alan kozu seçer.</li>\n<li><b>Eşli ihaleli:</b> karşılıklı oturanlar takımdır; ihale takımın toplam eliyle tutturulur.</li>\n<li><b>Koz Maça:</b> ihale yok, koz her zaman <b>maça</b>. Herkes kaç el alacağını söyler.</li>\n</ul>\n<h4>İhale (İhaleli ve Eşli)</h4>\n<ul>\n<li>13'er kart dağıtılır. Dağıtanın sağındaki başlayarak herkes bir öncekinden <b>yüksek</b> bir sayı söyler ya da <b>pas</b> der. Pas diyen tekrar giremez.</li>\n<li>En düşük ihale <b>5</b> (ayar: 4). Kimse ihaleye girmezse ihale <b>4</b> ile dağıtana kalır.</li>\n<li>İhaleyi alan kozu seçer ve ilk eli o açar.</li>\n</ul>\n<h4>Oyun kuralları (tüm modlar)</h4>\n<ul>\n<li>Koz henüz oynanmadıysa ele kozla başlanamaz (elinde sadece koz kalmadıysa).</li>\n<li>Yerdeki rengi <b>takip etmek zorundasın</b>.</li>\n<li>Aynı renkten yerdekinden <b>büyük</b> kartın varsa onu oynamak zorundasın (<b>yükseltme</b>). Yoksa o renkten istediğini atarsın.</li>\n<li>O renk sende yoksa <b>koz çakmak zorundasın</b>. Yerde koz varsa ve daha büyük kozun varsa onu atmalısın.</li>\n<li>Renk yerine koz çakılmışsa ve sende o renk varsa, o renkten istediğin kartı atabilirsin (yükseltme gerekmez).</li>\n<li>Renk de koz da yoksa istediğin kartı atarsın.</li>\n<li>Eli yerdeki en büyük koz, koz yoksa açılan rengin en büyük kartı alır; eli alan sonraki eli açar.</li>\n</ul>\n<h4>Puanlama</h4>\n<p><b>Onluk (×10, varsayılan — popüler uygulamalardaki gibi):</b></p>\n<ul>\n<li>İhaleyi (ya da sözünü) tutturan: <b>10 × ihale + fazla eller</b>. Tutturamayan (<b>batan</b>): <b>−10 × ihale</b>.</li>\n<li>İhaleye girmeyenler aldıkları el kadar puan alır; <b>hiç el alamayan</b> −10 × ihale yer.</li>\n<li>Eşlide aynı hesap takımın toplam eliyle yapılır ve iki ortağa da yazılır.</li>\n</ul>\n<p><b>Basit:</b> tutturan aldığı el kadar, batan −ihale; diğerleri aldığı el kadar.</p>\n<p><b>Koz Maça:</b> herkes kendi sözüne göre yukarıdaki gibi puan alır.</p>\n<p><b>Oyundaki ayarlar:</b> Mod · El sayısı (4/8/12/16) · En düşük ihale (5/4) · Puanlama (Onluk/Basit) · Hamle süresi.</p>", "pisti": "<h3>🃏 Pişti</h3>\n<p><b>Oyuncu:</b> 2 ya da 4 kişi (4 kişide <b>eşli</b> ya da tekli) · <b>Deste:</b> 52 kart · <b>Kazanan:</b> el sonunda hedef puana (101; ayar 51/151) ilk ulaşan. İki taraf aynı elde geçerse puanı yüksek olan kazanır.</p>\n<h4>Dağıtım</h4>\n<ul>\n<li>Ortaya 4 kart konur: 3'ü kapalı, en üstteki açık. Açık kart vale çıkarsa yerine başka kart açılır.</li>\n<li>Herkese 4'er kart dağıtılır. Kartlar bitince deste bitene kadar 4'er kart daha dağıtılır (yere kart konmaz).</li>\n</ul>\n<h4>Oynanış</h4>\n<ul>\n<li>Sırası gelen bir kart atar. Attığın kart yerdeki <b>en üst kartla aynı</b> ise (ör. 7'ye 7) yerdeki <b>bütün kartları</b> alırsın.</li>\n<li><b>Vale (J)</b> her zaman yerdekilerin hepsini alır.</li>\n<li>Eşleşmeyen kart yığının üstüne konur.</li>\n<li>İlk toplayan, başlangıçtaki kapalı 3 kartı da alır.</li>\n<li>Son kart oynandığında yerde kalanlar <b>en son toplayan</b> tarafa gider.</li>\n</ul>\n<h4>Pişti</h4>\n<ul>\n<li>Yerde <b>tek kart</b> varken aynısını atarak almak <b>pişti</b>dir: <b>10 puan</b>.</li>\n<li>Tek valeyi valeyle almak <b>vale piştisi</b>: <b>20 puan</b>.</li>\n<li>Valeyle tek (vale olmayan) kartı almak pişti sayılmaz.</li>\n<li>Elin en <b>son kartıyla</b> yapılan pişti sayılmaz (normal toplama olur).</li>\n</ul>\n<h4>El sonu puanları</h4>\n<table class=\"rtbl\"><tr><th>Kart / durum</th><th>Puan</th></tr><tr><td>Her as</td><td>1</td></tr><tr><td>Her vale</td><td>1</td></tr><tr><td>Sinek 2'li (♣2)</td><td>2</td></tr><tr><td>Karo 10'lu (♦10)</td><td>3</td></tr><tr><td>En çok kart toplayan</td><td>3 (eşitlikte kimse almaz)</td></tr><tr><td>Her pişti / vale piştisi</td><td>10 / 20</td></tr></table>\n<p>Eşli oyunda iki ortağın kartları ve puanları birlikte sayılır.</p>\n<p><b>Oyundaki ayarlar:</b> Oyuncu sayısı (2/4) · 4 kişide Eşli/Tekli · Oyun sonu (51/101/151) · Hamle süresi.</p>", "_common": "<h3>Ortak özellikler (popüler uygulamalardan örnek alınan)</h3>\n<ul>\n<li><b>Online oda:</b> 4 harfli kodla katılım, boş koltuklara bot. Kopan oyuncunun yerine bot oynar; aynı isimle dönen yerini geri alır.</li>\n<li><b>Hamle süresi</b> (ayar: yok/20/30/60 sn): süre dolunca hamleyi bot yapar.</li>\n<li><b>Otomatik diz:</b> Seri Diz / Çift Diz, taşları sürükleyerek düzenleme, 101'de dizili per toplamı.</li>\n<li>Sohbet, emojiler, el sonu özet tablosu, açık eller.</li>\n</ul>\n<h3>Kaynaklar</h3>\n<ul>\n<li>pagat.com — Okey 101, Pişti kuralları</li>\n<li>Altinstar — Okey 101 resmi kuralları</li>\n<li>okey.gg — 101 (katlamalı mod, okey alma, siler, elden bitme)</li>\n<li>Wikipedia — Okey (20 puan düşme sistemi)</li>\n<li>App Store açıklamaları — Zynga 101 Okey Plus / Okey Plus, Batak Club, Fuzzy Batak &amp; Pişti, Batak İhaleli kural listesi</li>\n</ul>"};
 /* ===================== ORTAK MOTOR ===================== */
 const GAMES = {};
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -355,10 +370,11 @@ function handQuality(hand, x) {
 /* ===================== PİŞTİ ===================== */
 GAMES.pisti = {
   name: 'Pişti', icon: '🃏', players: [2, 4], kind: 'cards',
-  desc: 'Yere atılan kartla aynı kartı ya da Vale (J) at, yerdekileri topla. Tek karta aynısını atarsan PİŞTİ!',
-  opts: { target: { label: 'Oyun sonu', values: [51, 101, 151], def: 101, fmt: v => v + ' sayı' } },
+  desc: 'Yere atılan kartla aynı kartı ya da Vale (J) at, yerdekileri topla. Tek karta aynısını atarsan PİŞTİ! 2 kişi, 4 kişi tekli ya da eşli.',
+  opts: { target: { label: 'Oyun sonu', values: [51, 101, 151], def: 101, fmt: v => v + ' sayı' },
+    teams: { label: '4 kişide', values: [1, 0], def: 1, fmt: v => v ? 'Eşli (karşılıklı)' : 'Tekli' } },
   create(o, n) {
-    const s = { g: 'pisti', n, target: o.target || 101, scores: Array(n).fill(0), dealer: Math.random() * n | 0, round: 0, log: [], over: false };
+    const s = { g: 'pisti', n, teams: n === 4 && (o.teams === undefined ? 1 : +o.teams) ? 1 : 0, target: o.target || 101, scores: Array(n).fill(0), dealer: Math.random() * n | 0, round: 0, log: [], over: false };
     this.newRound(s); return s;
   },
   newRound(s) {
@@ -379,7 +395,8 @@ GAMES.pisti = {
     s.pile.push(c); s.ev = { type: 'play', seat, card: c, k: Math.random() };
     if (top !== undefined && (cRank(c) === cRank(top) || cRank(c) === 11)) {
       const nm = '{' + seat + '}';
-      if (s.pile.length === 2 && cRank(c) === cRank(top)) {
+      const lastCard = !s.deck.length && s.hands.every(x => !x.length);
+      if (s.pile.length === 2 && cRank(c) === cRank(top) && !lastCard) {
         const pts = cRank(c) === 11 ? 20 : 10; s.pisti[seat] += pts; s.ev.pisti = pts; s.log.unshift(`${nm} PİŞTİ yaptı! +${pts}`);
       } else s.log.unshift(`${nm} ${s.pile.length} kartı topladı`);
       s.ev.capture = seat; s.ev.ids = s.pile.slice(); s.cap[seat].push(...s.pile); s.pile = []; s.hidden = 0; s.lastCap = seat;
@@ -393,23 +410,23 @@ GAMES.pisti = {
   },
   endRound(s) {
     if (s.pile.length && s.lastCap >= 0) { s.cap[s.lastCap].push(...s.pile); s.log.unshift(`Kalan ${s.pile.length} kart son toplayan {${s.lastCap}} oyuncusuna`); s.pile = []; }
-    const pts = s.cap.map((cs, i) => {
-      let p = s.pisti[i];
-      for (const c of cs) { const r = cRank(c), su = cSuit(c); if (r === 14 || r === 11) p += 1; if (r === 2 && su === 3) p += 2; if (r === 10 && su === 2) p += 3; }
-      return p;
-    });
-    const mx = Math.max(...s.cap.map(c => c.length)); const who = s.cap.map((c, i) => c.length === mx ? i : -1).filter(i => i >= 0);
-    if (who.length === 1) pts[who[0]] += 3;
-    s.roundPts = pts; pts.forEach((p, i) => s.scores[i] += p);
-    s.summary = { title: `${s.round}. El Sonucu`, rows: pts.map((p, i) => ({ seat: i, cells: [s.cap[i].length + ' kart', s.pisti[i] ? s.pisti[i] + ' pişti puanı' : '', '+' + p], total: s.scores[i] })) };
-    const best = Math.max(...s.scores);
-    if (best >= s.target && s.scores.filter(x => x === best).length === 1) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(best); s.summary.title = 'Oyun Bitti'; }
+    const tm = i => s.teams ? i % 2 : i, T = s.teams ? 2 : s.n;
+    const cardPts = s.cap.map((cs, i) => { let p = s.pisti[i]; for (const c of cs) { const r = cRank(c), su = cSuit(c); if (r === 14 || r === 11) p += 1; if (r === 2 && su === 3) p += 2; if (r === 10 && su === 2) p += 3; } return p; });
+    const tCards = Array(T).fill(0), tPts = Array(T).fill(0);
+    s.cap.forEach((cs, i) => { tCards[tm(i)] += cs.length; tPts[tm(i)] += cardPts[i]; });
+    const mx = Math.max(...tCards), who = tCards.map((c, t) => c === mx ? t : -1).filter(t => t >= 0);
+    if (who.length === 1) tPts[who[0]] += 3;
+    const pts = s.cap.map((_, i) => tPts[tm(i)]);
+    pts.forEach((p, i) => s.scores[i] += p); s.roundPts = pts;
+    s.summary = { title: `${s.round}. El Sonucu`, rows: pts.map((p, i) => ({ seat: i, cells: [(s.teams ? `Takım ${tm(i) + 1} · ` : '') + s.cap[i].length + ' kart', s.pisti[i] ? s.pisti[i] + ' pişti puanı' : '', '+' + (s.teams ? cardPts[i] + ' (takım +' + p + ')' : p)], total: s.scores[i] })) };
+    const best = Math.max(...s.scores), leaders = new Set(s.scores.map((x, i) => x === best ? tm(i) : -1).filter(t => t >= 0));
+    if (best >= s.target && leaders.size === 1) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(best); s.winTeam = s.teams ? [...leaders][0] : -1; s.summary.title = 'Oyun Bitti'; }
     else s.phase = 'roundEnd';
   },
   auto(s) { return s.phase === 'roundEnd' ? 7000 : null; },
   advance(s) { if (s.phase === 'roundEnd') this.newRound(s); },
   view(s, seat) {
-    return { g: 'pisti', n: s.n, phase: s.phase, turn: s.turn, round: s.round, target: s.target, scores: s.scores, log: s.log.slice(0, 6),
+    return { g: 'pisti', n: s.n, teams: s.teams, winTeam: s.winTeam, phase: s.phase, turn: s.turn, round: s.round, target: s.target, scores: s.scores, log: s.log.slice(0, 6),
       hand: s.hands[seat] ? s.hands[seat].slice() : [], counts: s.hands.map(h => h.length), deck: s.deck.length,
       pile: s.pile.map((c, i) => i < s.hidden ? -1 : c), cap: s.cap.map(c => c.length), pisti: s.pisti, ev: s.ev, summary: s.summary, over: s.over, winner: s.winner,
       legal: seat === s.turn && s.phase === 'play' ? s.hands[seat].slice() : [] };
@@ -434,10 +451,13 @@ GAMES.pisti = {
 /* ===================== BATAK (İhaleli) ===================== */
 GAMES.batak = {
   name: 'Batak', icon: '♠️', players: [4], kind: 'cards',
-  desc: 'İhaleli batak. En yüksek ihaleyi veren kozu seçer. Renk takip etmek ve yükseltmek zorunlu, renk yoksa koz çakılır.',
-  opts: { rounds: { label: 'El sayısı', values: [4, 8, 12, 16], def: 8, fmt: v => v + ' el' }, minBid: { label: 'En düşük ihale', values: [4, 5], def: 4, fmt: v => v } },
+  desc: 'İhaleli, Eşli ihaleli ya da Koz Maça. Renk takip etmek ve yükseltmek zorunlu, renk yoksa koz çakılır.',
+  opts: { mode: { label: 'Mod', values: [0, 1, 2], def: 0, fmt: v => ['İhaleli (tekli)', 'Eşli ihaleli', 'Koz Maça'][v] },
+    rounds: { label: 'El sayısı', values: [4, 8, 12, 16], def: 8, fmt: v => v + ' el' },
+    minBid: { label: 'En düşük ihale', values: [5, 4], def: 5, fmt: v => v },
+    scoring: { label: 'Puanlama', values: [1, 0], def: 1, fmt: v => v ? 'Onluk (×10)' : 'Basit' } },
   create(o, n) {
-    const s = { g: 'batak', n: 4, rounds: o.rounds || 8, minBid: o.minBid || 4, scores: [0, 0, 0, 0], dealer: Math.random() * 4 | 0, round: 0, log: [], over: false };
+    const s = { g: 'batak', n: 4, mode: +o.mode || 0, scoring: o.scoring === undefined ? 1 : +o.scoring, rounds: o.rounds || 8, minBid: o.minBid || 5, scores: [0, 0, 0, 0], dealer: Math.random() * 4 | 0, round: 0, log: [], over: false };
     this.newRound(s); return s;
   },
   newRound(s) {
@@ -468,13 +488,20 @@ GAMES.batak = {
   },
   act(s, seat, a) {
     if (seat !== s.turn) return 'Sıra sende değil';
+    if (s.phase === 'bid' && s.mode === 2) { // koz maça: herkes kaç el alacağını söyler, koz maça
+      if (a.type !== 'bid' || a.bid === 'pass') return 'Kaç el alacağını söyle';
+      const b = a.bid | 0; if (b < 1 || b > 13) return 'Geçersiz'; s.bids[seat] = b; s.log.unshift(`{${seat}} ${b} el dedi`);
+      if (s.bids.every(x => x !== null)) { s.trump = 0; s.phase = 'play'; s.turn = (s.dealer + 1) % 4; s.log.unshift('Koz: ♠ Maça'); s.ev = { type: 'trump', k: Math.random() }; }
+      else s.turn = (s.turn + 1) % 4;
+      return null;
+    }
     if (s.phase === 'bid') {
       if (a.type !== 'bid') return 'İhale bekleniyor';
       if (a.bid === 'pass') { s.bids[seat] = 'pass'; s.log.unshift(`{${seat}} pas geçti`); }
       else { const b = a.bid | 0; if (b < Math.max(s.minBid, s.curBid + 1) || b > 13) return 'Geçersiz ihale'; s.bids[seat] = b; s.curBid = b; s.bidder = seat; s.log.unshift(`{${seat}} ${b} dedi`); }
       const active = [0, 1, 2, 3].filter(i => s.bids[i] !== 'pass');
       if (active.length === 1 && s.bidder === active[0]) return this.wonBid(s, active[0]);
-      if (active.length === 0) { s.bidder = s.dealer; s.curBid = s.minBid; s.bids[s.dealer] = s.minBid; s.log.unshift(`Herkes pas, ihale dağıtana (${s.minBid})`); return this.wonBid(s, s.dealer); }
+      if (active.length === 0) { s.bidder = s.dealer; s.curBid = 4; s.bids[s.dealer] = 4; s.log.unshift('Herkes pas, ihale dağıtana kaldı (4)'); return this.wonBid(s, s.dealer); }
       let t = s.turn; do { t = (t + 1) % 4; } while (s.bids[t] === 'pass'); s.turn = t;
       if (active.length === 1 && s.bidder < 0) { /* tek kalan henüz söylemedi */ }
       return null;
@@ -510,16 +537,29 @@ GAMES.batak = {
       if (s.hands.every(h => !h.length)) this.endRound(s);
     } else if (s.phase === 'roundEnd') this.newRound(s);
   },
+  // puan: ihale/söz tuttu mu
+  contract(s, bid, got) { return s.scoring ? (got >= bid ? 10 * bid + (got - bid) : -10 * bid) : (got >= bid ? got : -bid); },
   endRound(s) {
-    const pts = s.tricks.map((t, i) => i === s.bidder ? (t >= s.curBid ? t : -s.curBid) : t);
+    let pts, notes = [];
+    if (s.mode === 2) pts = s.tricks.map((t, i) => this.contract(s, s.bids[i], t));
+    else if (s.mode === 1) {
+      const bt = s.bidder % 2, tt = [s.tricks[0] + s.tricks[2], s.tricks[1] + s.tricks[3]];
+      const tp = [0, 1].map(t => t === bt ? this.contract(s, s.curBid, tt[t]) : (s.scoring && tt[t] === 0 ? -10 * s.curBid : tt[t]));
+      pts = [0, 1, 2, 3].map(i => tp[i % 2]); notes = tt;
+      s.log.unshift(tt[bt] >= s.curBid ? `Takım ${bt + 1} ihaleyi çıkardı (${tt[bt]})` : `Takım ${bt + 1} BATTI! (${tt[bt]}/${s.curBid})`);
+    } else {
+      pts = s.tricks.map((t, i) => i === s.bidder ? this.contract(s, s.curBid, t) : (s.scoring && t === 0 ? -10 * s.curBid : t));
+      s.log.unshift(s.tricks[s.bidder] >= s.curBid ? `{${s.bidder}} ihaleyi çıkardı` : `{${s.bidder}} BATTI! (-${s.scoring ? 10 * s.curBid : s.curBid})`);
+    }
     pts.forEach((p, i) => s.scores[i] += p);
-    s.log.unshift(s.tricks[s.bidder] >= s.curBid ? `{${s.bidder}} ihaleyi çıkardı` : `{${s.bidder}} BATTI! (-${s.curBid})`);
-    s.summary = { title: `${s.round}. El Sonucu`, rows: pts.map((p, i) => ({ seat: i, cells: [s.tricks[i] + ' el aldı', i === s.bidder ? 'İhale ' + s.curBid + (p < 0 ? ' · BATTI' : ' ✔') : '', (p > 0 ? '+' : '') + p], total: s.scores[i] })) };
-    if (s.round >= s.rounds) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(Math.max(...s.scores)); s.summary.title = 'Oyun Bitti'; }
+    s.summary = { title: `${s.round}. El Sonucu`, rows: pts.map((p, i) => ({ seat: i, cells: [s.tricks[i] + ' el aldı' + (s.mode === 1 ? ` (takım ${notes[i % 2]})` : ''),
+      s.mode === 2 ? `Söz ${s.bids[i]}` + (s.tricks[i] >= s.bids[i] ? ' ✔' : ' · BATTI') : (i === s.bidder ? 'İhale ' + s.curBid + (p < 0 ? ' · BATTI' : ' ✔') : (s.mode === 1 && i % 2 === s.bidder % 2 ? 'İhale ortağı' : '')),
+      (p > 0 ? '+' : '') + p], total: s.scores[i] })) };
+    if (s.round >= s.rounds) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(Math.max(...s.scores)); s.winTeam = s.mode === 1 ? s.winner % 2 : -1; s.summary.title = 'Oyun Bitti'; }
     else s.phase = 'roundEnd';
   },
   view(s, seat) {
-    return { g: 'batak', n: 4, phase: s.phase, turn: s.turn, round: s.round, rounds: s.rounds, scores: s.scores, log: s.log.slice(0, 6),
+    return { g: 'batak', n: 4, mode: s.mode, teams: s.mode === 1 ? 1 : 0, winTeam: s.winTeam, scoring: s.scoring, phase: s.phase, turn: s.turn, round: s.round, rounds: s.rounds, scores: s.scores, log: s.log.slice(0, 6),
       hand: (s.hands[seat] || []).slice(), counts: s.hands.map(h => h.length), bids: s.bids, curBid: s.curBid, bidder: s.bidder, minBid: s.minBid,
       trump: s.trump, trick: s.trick, tricks: s.tricks, taken: s.taken.map(t => t.length), ev: s.ev, summary: s.summary, over: s.over, winner: s.winner, trickWinner: s.phase === 'trickEnd' ? s.trickWinner : -1,
       legal: this.legal(s, seat) };
@@ -533,6 +573,9 @@ GAMES.batak = {
   },
   bot(s, seat) {
     const h = s.hands[seat];
+    if (s.phase === 'bid' && s.mode === 2) { const by = [0, 1, 2, 3].map(su => h.filter(c => cSuit(c) === su).map(cRank).sort((a, b) => b - a));
+      let e = 0; by.forEach((r, su) => { if (r[0] === 14) e += 1; if (r.includes(13) && r.length >= 2 && su) e += 0.6; }); e += Math.max(0, by[0].length - 3) + by[0].filter(r => r >= 12 && r < 14).length * 0.5;
+      return { type: 'bid', bid: Math.max(1, Math.min(13, Math.round(e))) }; }
     if (s.phase === 'bid') {
       const { e } = this.estimate(h); const need = Math.max(s.minBid, s.curBid + 1);
       if (Math.floor(e + 0.3) >= need && need <= 13) return { type: 'bid', bid: need };
@@ -549,6 +592,8 @@ GAMES.batak = {
       if (seat === s.bidder && koz.length >= 3) return { type: 'play', card: koz.sort((a, b) => cRank(b) - cRank(a))[0] };
       return { type: 'play', card: L.slice().sort((a, b) => cRank(a) - cRank(b))[0] };
     }
+    const lowest0 = a => a.slice().sort((x, y) => (cSuit(x) === s.trump) - (cSuit(y) === s.trump) || cRank(x) - cRank(y))[0];
+    if (s.mode === 1) { const cur = this.winner(s); if (cur % 2 === seat % 2) return { type: 'play', card: lowest0(L) }; }
     // kazanabiliyorsa en ucuz kazanan, yoksa en küçük
     const wins = L.filter(c => { const t = s.trick.concat([{ seat, card: c }]); const save = s.trick; s.trick = t; const w = this.winner(s); s.trick = save; return w === seat; });
     const lowest = a => a.slice().sort((x, y) => (cSuit(x) === s.trump) - (cSuit(y) === s.trump) || cRank(x) - cRank(y))[0];
@@ -593,13 +638,21 @@ const okeyBase = {
 
 GAMES.okey = Object.assign({}, okeyBase, {
   name: 'Okey', icon: '🀄',
-  desc: '14 taşını per (seri veya aynı sayı farklı renk) ya da 7 çift yap, 15. taşı atarak bitir. Göstergenin bir üstü okeydir.',
-  opts: { rounds: { label: 'El sayısı', values: [3, 5, 7, 9], def: 5, fmt: v => v + ' el' } },
-  create(o) { const s = { g: 'okey', n: 4, rounds: o.rounds || 5, round: 0, scores: [0, 0, 0, 0], dealer: Math.random() * 4 | 0, log: [], over: false }; this.newRound(s); return s; },
-  newRound(s) { s.round++; this.setupTiles(s, 14); s.summary = null; s.log.unshift(`${s.round}. el başladı`); },
+  desc: '14 taşını per ya da 7 çift yap, 15. taşı atarak bitir. Herkes 20 puanla başlar, biten oyuncu diğerlerinden puan düşürür. Göstergeyi göstermek 1 puan.',
+  opts: { start: { label: 'Başlangıç puanı', values: [20, 12, 6], def: 20, fmt: v => v + ' puan' } },
+  create(o) { const st = o.start || 20; const s = { g: 'okey', n: 4, start: st, round: 0, scores: [st, st, st, st], dealer: Math.random() * 4 | 0, log: [], over: false }; this.newRound(s); return s; },
+  newRound(s) { s.round++; this.setupTiles(s, 14); s.summary = null; s.played = [false, false, false, false]; s.shown = false; s.log.unshift(`${s.round}. el başladı`); },
   turnSeat(s) { return (s.phase === 'draw' || s.phase === 'discard') ? s.turn : -1; },
+  canShow(s, seat) { if (s.shown || s.played[seat] || seat !== s.turn) return false; const I = tile(s.indicator); return s.hands[seat].some(t => t !== s.indicator && !tile(t).fake && tile(t).c === I.c && tile(t).n === I.n); },
   act(s, seat, a) {
     if (seat !== s.turn) return 'Sıra sende değil';
+    if (a.type === 'gosterge') {
+      if (!this.canShow(s, seat)) return 'Gösterge yapamazsın (göstergenin aynısı elinde olmalı, ilk hamlende)';
+      s.shown = true; for (let i = 0; i < 4; i++) if (i !== seat) s.scores[i] -= 1;
+      s.log.unshift(`{${seat}} GÖSTERGE yaptı! Diğerleri -1`); s.ev = { type: 'show', seat, k: Math.random() };
+      if (s.scores.some(p => p <= 0)) return this.endRound(s, -1, 0, ['gösterge']);
+      return null;
+    }
     if (s.phase === 'draw') { if (a.type !== 'draw') return 'Önce taş çek'; const r = this.drawCommon(s, seat, a); return r === 'TOOK' ? null : r; }
     if (s.phase !== 'discard') return 'Bekle';
     const h = s.hands[seat];
@@ -614,12 +667,13 @@ GAMES.okey = Object.assign({}, okeyBase, {
         let pts = 2; const notes = [];
         if (isWild(a.tile, s.x)) { pts *= 2; notes.push('okey atarak'); }
         if (asPairs && !asGroups) { pts *= 2; notes.push('çiftten'); }
-        s.scores[seat] += pts; s.winGroups = asGroups ? g.groups : p.pairs; s.winner = seat;
-        s.log.unshift(`{${seat}} ELİ BİTİRDİ${notes.length ? ' (' + notes.join(', ') + ')' : ''} +${pts}`);
+        for (let i = 0; i < 4; i++) if (i !== seat) s.scores[i] -= pts;
+        s.winGroups = asGroups ? g.groups : p.pairs;
+        s.log.unshift(`{${seat}} ELİ BİTİRDİ${notes.length ? ' (' + notes.join(', ') + ')' : ''}: diğerleri -${pts}`);
         s.ev = { type: 'finish', seat, k: Math.random() };
         return this.endRound(s, seat, pts, notes);
       }
-      h.splice(h.indexOf(a.tile), 1); s.discards[seat].push(a.tile); s.ev = { type: 'discard', seat, tile: a.tile, k: Math.random() };
+      h.splice(h.indexOf(a.tile), 1); s.discards[seat].push(a.tile); s.played[seat] = true; s.ev = { type: 'discard', seat, tile: a.tile, k: Math.random() };
       if (!s.pile.length) { s.log.unshift('Ortada taş bitti, el berabere'); return this.endRound(s, -1, 0, []); }
       s.turn = (s.turn + 1) % 4; s.phase = 'draw'; return null;
     }
@@ -627,21 +681,22 @@ GAMES.okey = Object.assign({}, okeyBase, {
   },
   endRound(s, w, pts, notes) {
     s.revealHands = s.hands.map(h => h.slice());
-    s.summary = { title: `${s.round}. El Sonucu`, rows: [0, 1, 2, 3].map(i => ({ seat: i, cells: [i === w ? 'BİTİRDİ' + (notes.length ? ' · ' + notes.join(', ') : '') : '', i === w ? '+' + pts : '0'], total: s.scores[i] })) };
-    if (s.round >= s.rounds) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(Math.max(...s.scores)); s.summary.title = 'Oyun Bitti'; }
+    s.summary = { title: `${s.round}. El Sonucu`, rows: [0, 1, 2, 3].map(i => ({ seat: i, cells: [i === w ? 'BİTİRDİ' + (notes.length ? ' · ' + notes.join(', ') : '') : '', w < 0 ? '0' : i === w ? '0' : '-' + pts], total: s.scores[i] })) };
+    if (s.scores.some(p => p <= 0)) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(Math.max(...s.scores)); s.summary.title = 'Oyun Bitti'; }
     else s.phase = 'roundEnd';
     return null;
   },
   auto(s) { return s.phase === 'roundEnd' ? 8000 : null; },
   advance(s) { if (s.phase === 'roundEnd') this.newRound(s); },
   view(s, seat) {
-    return { g: 'okey', n: 4, phase: s.phase, turn: s.turn, round: s.round, rounds: s.rounds, scores: s.scores, log: s.log.slice(0, 6),
+    return { g: 'okey', n: 4, phase: s.phase, turn: s.turn, round: s.round, start: s.start, canShow: this.canShow(s, seat), scores: s.scores, log: s.log.slice(0, 6),
       hand: (s.hands[seat] || []).slice(), counts: s.hands.map(h => h.length), pile: s.pile.length, indicator: s.indicator, x: s.x,
       discards: s.discards.map(d => d.slice(-3)), dcount: s.discards.map(d => d.length), ev: s.ev, summary: s.summary, over: s.over, winner: s.winner,
       reveal: (s.phase === 'roundEnd' || s.phase === 'over') ? s.revealHands : null };
   },
   bot(s, seat) {
     const h = s.hands[seat], x = s.x;
+    if (this.canShow(s, seat)) return { type: 'gosterge' };
     if (s.phase === 'draw') {
       const d = s.discards[this.prev(seat)], top = d[d.length - 1];
       if (top !== undefined) {
@@ -658,96 +713,143 @@ GAMES.okey = Object.assign({}, okeyBase, {
   }
 });
 
-/* ===================== 101 OKEY ===================== */
+/* ===================== 101 OKEY =====================
+   Kaynak: pagat.com Okey 101, Altinstar 101 kuralları, okey.gg (101 Okey Plus tarzı katlamalı mod) */
+// masadaki perde okeyin yerine geçtiği taş (okey alma için)
+function wildSlots(ids, x) {
+  const v = validGroup(ids, x); if (!v) return [];
+  const W = ids.filter(i => isWild(i, x)); if (!W.length) return [];
+  if (v.type === 'run') return v.order.map((id, k) => isWild(id, x) ? { id, c: v.c, n: v.start + k } : null).filter(Boolean);
+  if (v.type === 'set' && ids.length === 4 && W.length === 1) { const cols = ids.filter(i => !isWild(i, x)).map(i => effT(i, x).c); const miss = [0, 1, 2, 3].find(c => !cols.includes(c)); return [{ id: W[0], c: miss, n: v.n }]; }
+  return [];
+}
 GAMES.okey101 = Object.assign({}, okeyBase, {
   name: '101 Okey', icon: '💯',
-  desc: 'Toplamı en az 101 olan perlerle ya da 5 çiftle elini aç, sonra perlere taş işle. Elinde kalan taşlar ceza puanıdır; en düşük puan kazanır.',
-  opts: { rounds: { label: 'El sayısı', values: [1, 3, 5, 7, 9], def: 3, fmt: v => v + ' el' } },
-  create(o) { const s = { g: 'okey101', n: 4, rounds: o.rounds || 3, round: 0, scores: [0, 0, 0, 0], dealer: Math.random() * 4 | 0, log: [], over: false }; this.newRound(s); return s; },
+  desc: 'Toplamı en az 101 olan perlerle ya da 5 çiftle elini aç, perlere taş işle, okeyi al. Elinde kalan taşlar ceza puanıdır; en düşük puan kazanır.',
+  opts: {
+    rounds: { label: 'El sayısı', values: [1, 3, 5, 7, 9, 11], def: 5, fmt: v => v + ' el' },
+    katla: { label: 'Açış', values: [1, 0], def: 1, fmt: v => v ? 'Katlamalı' : 'Katlamasız' },
+    siler: { label: 'Siler (150+ / 7 çift = -101)', values: [1, 0], def: 1, fmt: v => v ? 'Açık' : 'Kapalı' }
+  },
+  create(o) { const s = { g: 'okey101', n: 4, rounds: o.rounds || 5, katla: o.katla === undefined ? 1 : +o.katla, siler: o.siler === undefined ? 1 : +o.siler, round: 0, scores: [0, 0, 0, 0], dealer: Math.random() * 4 | 0, log: [], over: false }; this.newRound(s); return s; },
   newRound(s) {
     s.round++; this.setupTiles(s, 21); s.summary = null; s.melds = []; s.opened = [null, null, null, null]; s.openedAt = [-1, -1, -1, -1];
-    s.pen = [0, 0, 0, 0]; s.turnNo = 0; s.mustUse = null; s.laid = false; s.noTake = false; s.log.unshift(`${s.round}. el başladı`);
+    s.pen = [0, 0, 0, 0]; s.turnNo = 0; s.mustUse = null; s.laid = false; s.noTake = false; s.best = { seri: 0, cift: 0 }; s.layer = {};
+    s.log.unshift(`${s.round}. el başladı`);
   },
+  need(s) { return { seri: s.katla ? Math.max(101, s.best.seri + 1) : 101, cift: s.katla ? Math.max(5, s.best.cift + 1) : 5 }; },
   turnSeat(s) { return (s.phase === 'draw' || s.phase === 'discard') ? s.turn : -1; },
   canAdd(s, tileId) { return s.melds.findIndex(m => m.type !== 'pair' && validGroup(m.ids.concat([tileId]), s.x)); },
+  canSwap(s, tileId) {
+    if (isWild(tileId, s.x)) return null; const e = effT(tileId, s.x);
+    for (let i = 0; i < s.melds.length; i++) { const m = s.melds[i]; if (m.type === 'pair') continue;
+      const sl = wildSlots(m.ids, s.x).find(w => w.c === e.c && w.n === e.n); if (sl) return { meld: i, wild: sl.id }; }
+    return null;
+  },
   act(s, seat, a) {
     if (seat !== s.turn) return 'Sıra sende değil';
     const h = s.hands[seat], x = s.x;
     if (s.phase === 'draw') {
       if (a.type !== 'draw') return 'Önce taş çek';
-      if (a.from === 'left' && s.noTake) return 'Bu tur yandan alamazsın';
+      if (a.from === 'left') {
+        if (s.noTake) return 'Bu tur yandan alamazsın';
+        const d = s.discards[this.prev(seat)]; if (d.length && isWild(d[d.length - 1], x)) return 'Yere atılan okey alınamaz';
+      }
       const r = this.drawCommon(s, seat, a); if (r === 'TOOK') { s.mustUse = s.drawn; return null; } return r;
     }
     if (s.phase !== 'discard') return 'Bekle';
     const has = ids => ids.every(i => h.includes(i)) && new Set(ids).size === ids.length;
     if (a.type === 'giveBack') {
       if (s.mustUse === null || !h.includes(s.mustUse)) return 'Geri veremezsin';
+      if (s.laid) { s.pen[seat] += 101; s.log.unshift(`{${seat}} yandan aldığı taşı kullanamadı: +101 ceza`); }
       h.splice(h.indexOf(s.mustUse), 1); s.discards[this.prev(seat)].push(s.mustUse); s.mustUse = null; s.phase = 'draw'; s.noTake = true; return null;
     }
     if (a.type === 'open' || a.type === 'lay') {
       const groups = (a.groups || []).filter(g => g && g.length); if (!groups.length) return 'Per seç';
       const all = groups.flat(); if (!has(all)) return 'Taşlar elinde yok';
       if (h.length - all.length < 1) return 'Atacak en az bir taş kalmalı';
-      const isPairs = a.kind === 'cift' || (a.type === 'lay' && s.opened[seat] === 'cift');
+      const isPairs = a.type === 'open' ? a.kind === 'cift' : s.opened[seat] === 'cift';
+      const nd = this.need(s);
+      if (a.type === 'lay' && !s.opened[seat]) return 'Önce elini açmalısın';
+      if (a.type === 'open' && s.opened[seat]) return 'Zaten açtın';
+      let tot = 0;
       if (isPairs) {
-        if (!groups.every(g => validPair(g, x))) return 'Geçersiz çift var';
-        if (a.type === 'open' && groups.length < 5) return 'Çift açmak için en az 5 çift gerekir';
+        if (!groups.every(g => validPair(g, x))) return 'Geçersiz çift var (aynı renk aynı sayı, ya da okeyle)';
+        if (a.type === 'open' && groups.length < nd.cift) return `Çift açmak için en az ${nd.cift} çift gerekir`;
+        tot = groups.length;
       } else {
         const v = groups.map(g => validGroup(g, x)); if (v.some(q => !q)) return 'Geçersiz per var (seri: aynı renk ardışık, ya da aynı sayı farklı renk; en az 3 taş)';
-        const tot = sum(v.map(q => q.value));
-        if (a.type === 'open' && tot < 101) return `Perlerin toplamı ${tot}, en az 101 olmalı`;
+        tot = sum(v.map(q => q.value));
+        if (a.type === 'open' && tot < nd.seri) return `Perlerin toplamı ${tot}, en az ${nd.seri} olmalı`;
         groups.forEach((g, k) => g.splice(0, g.length, ...v[k].order));
       }
-      if (a.type === 'open') { if (s.opened[seat]) return 'Zaten açtın'; s.opened[seat] = isPairs ? 'cift' : 'seri'; s.openedAt[seat] = s.turnNo; }
-      else if (!s.opened[seat]) return 'Önce elini açmalısın';
-      for (const g of groups) { for (const i of g) h.splice(h.indexOf(i), 1); s.melds.push({ owner: seat, ids: g.slice(), type: isPairs ? 'pair' : (validGroup(g, x).type) }); }
+      if (a.type === 'open') {
+        s.opened[seat] = isPairs ? 'cift' : 'seri'; s.openedAt[seat] = s.turnNo;
+        if (isPairs) s.best.cift = Math.max(s.best.cift, tot); else s.best.seri = Math.max(s.best.seri, tot);
+        s.log.unshift(`{${seat}} elini açtı (${isPairs ? tot + ' çift' : tot})`);
+        if (s.siler && (isPairs ? tot >= 7 : tot >= 150)) { s.pen[seat] -= 101; s.log.unshift(`{${seat}} SİLER! -101`); }
+      }
+      for (const g of groups) { for (const i of g) { h.splice(h.indexOf(i), 1); s.layer[i] = seat; } s.melds.push({ owner: seat, ids: g.slice(), type: isPairs ? 'pair' : (validGroup(g, x).type) }); }
       if (s.mustUse !== null && !h.includes(s.mustUse)) s.mustUse = null;
       s.laid = true; s.ev = { type: 'lay', seat, k: Math.random() };
-      if (a.type === 'open') { const tot = isPairs ? groups.length + ' çift' : sum(groups.map(g => validGroup(g, x).value)); s.log.unshift(`{${seat}} elini açtı (${tot})`); }
       return null;
     }
     if (a.type === 'add') {
       if (!s.opened[seat]) return 'İşlemek için önce elini açmalısın';
-      if (s.openedAt[seat] === s.turnNo) return 'Açtığın turda işleyemezsin';
       if (!h.includes(a.tile)) return 'Taş elinde yok';
-      if (h.length <= 1) return 'Atacak en az bir taş kalmalı';
       const m = s.melds[a.meld]; if (!m || m.type === 'pair') return 'Bu pere işlenmez';
+      // okey alma: perdeki okeyin yerine geçtiği gerçek taş
+      if (!isWild(a.tile, x)) { const e = effT(a.tile, x); const sl = wildSlots(m.ids, x).find(w => w.c === e.c && w.n === e.n);
+        if (sl) { const ids = m.ids.map(i => i === sl.id ? a.tile : i); const v = validGroup(ids, x); if (v) {
+          m.ids = v.order; h.splice(h.indexOf(a.tile), 1); h.push(sl.id); s.layer[a.tile] = seat;
+          const lw = s.layer[sl.id]; if (lw !== undefined && lw !== seat) { s.pen[lw] += 101; s.log.unshift(`{${seat}} okeyi aldı! {${lw}} +101 ceza`); } else s.log.unshift(`{${seat}} okeyi geri aldı`);
+          if (s.mustUse === a.tile) s.mustUse = null; s.laid = true; s.ev = { type: 'lay', seat, k: Math.random() }; return null; } } }
+      if (h.length <= 1) return 'Atacak en az bir taş kalmalı';
       const v = validGroup(m.ids.concat([a.tile]), x); if (!v) return 'Bu taş bu pere uymuyor';
-      m.ids = v.order; h.splice(h.indexOf(a.tile), 1); s.laid = true;
+      m.ids = v.order; h.splice(h.indexOf(a.tile), 1); s.layer[a.tile] = seat; s.laid = true;
       if (s.mustUse === a.tile) s.mustUse = null; s.ev = { type: 'lay', seat, k: Math.random() }; return null;
     }
     if (a.type === 'discard') {
       if (!h.includes(a.tile)) return 'Taş elinde yok';
       if (s.mustUse !== null) return 'Yandan aldığın taşı bu turda kullanmalısın (ya da geri ver)';
+      if (!h.filter(t => t !== a.tile).length && !s.opened[seat]) return 'Açmadan bitiremezsin';
       h.splice(h.indexOf(a.tile), 1); s.discards[seat].push(a.tile);
       s.ev = { type: 'discard', seat, tile: a.tile, k: Math.random() };
       if (!h.length) return this.finishRound(s, seat, a.tile);
-      if (s.melds.length && this.canAdd(s, a.tile) >= 0) { s.pen[seat] += 101; s.log.unshift(`{${seat}} işlek taş attı: +101 ceza`); }
-      else if (isWild(a.tile, x)) { s.pen[seat] += 101; s.log.unshift(`{${seat}} okey attı: +101 ceza`); }
+      if (isWild(a.tile, x)) { s.pen[seat] += 101; s.log.unshift(`{${seat}} okey attı: +101 ceza`); }
+      else if (s.melds.length && this.canAdd(s, a.tile) >= 0) { s.pen[seat] += 101; s.log.unshift(`{${seat}} işlek taş attı: +101 ceza`); }
       s.laid = false; s.noTake = false; s.mustUse = null; s.turnNo++;
-      if (!s.pile.length) { s.log.unshift('Ortada taş bitti'); return this.finishRound(s, -1); }
+      if (!s.pile.length) { s.log.unshift('Ortada taş bitti, el kimse bitirmeden kapandı'); return this.finishRound(s, -1); }
       s.turn = (s.turn + 1) % 4; s.phase = 'draw'; return null;
     }
     return 'Geçersiz hamle';
   },
   finishRound(s, w, lastTile) {
-    const x = s.x; let mult = 1; const notes = [];
-    if (w >= 0) {
-      if (isWild(lastTile, x)) { mult *= 2; notes.push('okeyle bitti'); }
-      if (s.openedAt[w] === s.turnNo) { mult *= 2; notes.push('elden bitti'); }
-      if (s.opened[w] === 'cift') { mult *= 2; notes.push('çiftten bitti'); }
+    const x = s.x; const notes = []; let pts;
+    const handVal = i => sum(s.hands[i].map(t => isWild(t, x) ? 101 : effT(t, x).n));
+    if (w < 0) {
+      // deste bitti: kimse açmadıysa yazılmaz; açan varsa açmayan 202, açan eldeki taşlar
+      const anyOpen = s.opened.some(Boolean);
+      pts = [0, 1, 2, 3].map(i => (anyOpen ? (!s.opened[i] ? 202 : handVal(i) * (s.opened[i] === 'cift' ? 2 : 1)) : 0) + s.pen[i]);
+      if (!anyOpen) notes.push('kimse açmadı, yazılmadı');
+    } else {
+      const okeyFin = isWild(lastTile, x), elden = s.openedAt[w] === s.turnNo && s.opened.every((o, i) => i === w || !o);
+      if (okeyFin) notes.push('okeyle bitti'); if (s.opened[w] === 'cift') notes.push('çiftten bitti'); if (elden) notes.push('ELDEN bitti');
+      if (elden) pts = [0, 1, 2, 3].map(i => (i === w ? (okeyFin ? -404 : -202) : (okeyFin ? 808 : 404)) + s.pen[i]);
+      else {
+        const mult = (okeyFin ? 2 : 1) * (s.opened[w] === 'cift' ? 2 : 1);
+        pts = [0, 1, 2, 3].map(i => {
+          if (i === w) return -101 * mult + s.pen[i];
+          if (!s.opened[i]) return 202 * (mult > 1 ? 2 : 1) + s.pen[i];
+          return handVal(i) * mult * (s.opened[i] === 'cift' ? 2 : 1) + s.pen[i];
+        });
+      }
       s.log.unshift(`{${w}} ELİ BİTİRDİ!${notes.length ? ' (' + notes.join(', ') + ')' : ''}`);
     }
-    const pts = [0, 1, 2, 3].map(i => {
-      if (i === w) return -101 * mult;
-      let p;
-      if (!s.opened[i]) p = 202;
-      else p = sum(s.hands[i].map(t => isWild(t, x) ? 101 : effT(t, x).n)) * (s.opened[i] === 'cift' ? 2 : 1);
-      return p * (w >= 0 ? mult : 1) + s.pen[i];
-    });
     pts.forEach((p, i) => s.scores[i] += p);
     s.revealHands = s.hands.map(h => h.slice());
-    s.summary = { title: `${s.round}. El Sonucu`, lowWins: true, rows: pts.map((p, i) => ({ seat: i, cells: [i === w ? 'BİTİRDİ' + (notes.length ? ' · ' + notes.join(', ') : '') : (s.opened[i] ? (s.opened[i] === 'cift' ? 'Çift açtı' : 'Açtı') + ` · ${s.hands[i].length} taş` : 'Açamadı'), s.pen[i] ? 'Ceza ' + s.pen[i] : '', (p > 0 ? '+' : '') + p], total: s.scores[i] })) };
+    s.summary = { title: `${s.round}. El Sonucu`, lowWins: true, rows: pts.map((p, i) => ({ seat: i, cells: [i === w ? 'BİTİRDİ' + (notes.length ? ' · ' + notes.join(', ') : '') : (s.opened[i] ? (s.opened[i] === 'cift' ? 'Çift açtı' : 'Açtı') + ` · ${s.hands[i].length} taş` : 'Açamadı'), s.pen[i] ? 'Ceza/ödül ' + s.pen[i] : '', (p > 0 ? '+' : '') + p], total: s.scores[i] })) };
+    if (w < 0 && notes.length) s.summary.title += ' · ' + notes[0];
     if (s.round >= s.rounds) { s.phase = 'over'; s.over = true; s.winner = s.scores.indexOf(Math.min(...s.scores)); s.summary.title = 'Oyun Bitti'; }
     else s.phase = 'roundEnd';
     s.ev = { type: 'finish', seat: w, k: Math.random() };
@@ -758,37 +860,42 @@ GAMES.okey101 = Object.assign({}, okeyBase, {
   view(s, seat) {
     return { g: 'okey101', n: 4, phase: s.phase, turn: s.turn, round: s.round, rounds: s.rounds, scores: s.scores, log: s.log.slice(0, 6),
       hand: (s.hands[seat] || []).slice(), counts: s.hands.map(h => h.length), pile: s.pile.length, indicator: s.indicator, x: s.x,
-      discards: s.discards.map(d => d.slice(-3)), dcount: s.discards.map(d => d.length), melds: s.melds, opened: s.opened, pen: s.pen,
-      mustUse: seat === s.turn ? s.mustUse : null, laid: s.laid, noTake: s.noTake, canAddNow: s.opened[seat] && s.openedAt[seat] !== s.turnNo,
+      discards: s.discards.map(d => d.slice(-3)), dcount: s.discards.map(d => d.length), melds: s.melds, opened: s.opened, pen: s.pen, need: this.need(s), katla: s.katla,
+      mustUse: seat === s.turn ? s.mustUse : null, laid: s.laid, noTake: s.noTake, canAddNow: !!s.opened[seat],
       ev: s.ev, summary: s.summary, over: s.over, winner: s.winner, reveal: (s.phase === 'roundEnd' || s.phase === 'over') ? s.revealHands : null };
   },
   bot(s, seat) {
-    const h = s.hands[seat], x = s.x, me = s.opened[seat];
+    const h = s.hands[seat], x = s.x, me = s.opened[seat], nd = this.need(s);
     if (s.phase === 'draw') {
       const d = s.discards[this.prev(seat)], top = d[d.length - 1];
-      if (top !== undefined && !s.noTake) {
+      if (top !== undefined && !s.noTake && !isWild(top, x)) {
         const withT = h.concat([top]);
-        if (me && me !== 'cift' && s.openedAt[seat] !== s.turnNo && this.canAdd(s, top) >= 0) return { type: 'draw', from: 'left' };
+        if (me && (this.canAdd(s, top) >= 0 || this.canSwap(s, top))) return { type: 'draw', from: 'left' };
         if (me === 'seri') { const g = solveGroups(withT, x, 'count'); if (g.groups.some(gr => gr.includes(top)) && g.groups.flat().length < withT.length) return { type: 'draw', from: 'left' }; }
-        if (!me) { const g = solveGroups(withT, x, 'value'); if (g.score >= 101 && g.groups.some(gr => gr.includes(top)) && g.groups.flat().length < withT.length) return { type: 'draw', from: 'left' }; }
+        if (!me) { const g = solveGroups(withT, x, 'value'); if (g.score >= nd.seri && g.groups.some(gr => gr.includes(top)) && g.groups.flat().length < withT.length) return { type: 'draw', from: 'left' }; }
       }
-      if (!s.pile.length) return { type: 'draw', from: 'left' };
       return { type: 'draw', from: 'pile' };
     }
-    // aç
+    if (s.mustUse !== null && !s.laid) {
+      const u = s.mustUse, canUse = me ? (this.canAdd(s, u) >= 0 || this.canSwap(s, u) || (me === 'seri' ? solveGroups(h, x, 'count').groups.some(g => g.includes(u)) : solvePairs(h, x).pairs.some(p => p.includes(u))))
+        : (solveGroups(h, x, 'value').score >= nd.seri && solveGroups(h, x, 'value').groups.some(g => g.includes(u)));
+      if (!canUse) return { type: 'giveBack' };
+      if (me && this.canAdd(s, u) >= 0) return { type: 'add', tile: u, meld: this.canAdd(s, u) };
+    }
     if (!me) {
       const g = solveGroups(h, x, 'value');
-      if (g.score >= 101) {
-        // atacak taş bırak
-        let groups = g.groups.map(a => a.slice()); while (groups.flat().length >= h.length && groups.length) { groups.sort((a, b) => validGroup(a, x).value - validGroup(b, x).value); if (sum(groups.slice(1).map(q => validGroup(q, x).value)) >= 101) groups.shift(); else { const big = groups[groups.length - 1]; if (big.length > 3) { const tr = big.slice(0, -1); if (validGroup(tr, x)) groups[groups.length - 1] = tr; else break; } else break; } }
-        if (groups.length && groups.flat().length < h.length && sum(groups.map(q => validGroup(q, x).value)) >= 101) return { type: 'open', kind: 'seri', groups };
+      if (g.score >= nd.seri) {
+        let groups = g.groups.map(a => a.slice());
+        while (groups.flat().length >= h.length && groups.length) { groups.sort((a, b) => validGroup(a, x).value - validGroup(b, x).value); if (sum(groups.slice(1).map(q => validGroup(q, x).value)) >= nd.seri) groups.shift(); else break; }
+        if (groups.length && groups.flat().length < h.length && sum(groups.map(q => validGroup(q, x).value)) >= nd.seri && (s.mustUse === null || groups.flat().includes(s.mustUse))) return { type: 'open', kind: 'seri', groups };
       }
-      const p = solvePairs(h, x);
-      if (p.pairs.length >= 5 && h.length - p.pairs.length * 2 >= 1 && solveGroups(h, x, 'value').score < 101) return { type: 'open', kind: 'cift', groups: p.pairs.slice(0, Math.min(p.pairs.length, Math.floor((h.length - 1) / 2))) };
+      const p = solvePairs(h, x); const k = Math.min(p.pairs.length, Math.floor((h.length - 1) / 2));
+      if (k >= nd.cift && g.score < nd.seri && (s.mustUse === null || p.pairs.slice(0, k).flat().includes(s.mustUse))) return { type: 'open', kind: 'cift', groups: p.pairs.slice(0, k) };
     } else {
-      if (me === 'seri') { const g = solveGroups(h, x, 'count'); let gs = g.groups.filter(q => q.length); if (gs.length) { while (gs.flat().length >= h.length && gs.length) gs.pop(); if (gs.length) return { type: 'lay', groups: gs }; } }
-      if (me === 'cift') { const p = solvePairs(h, x); if (p.pairs.length) { const k = Math.min(p.pairs.length, Math.floor((h.length - 1) / 2)); if (k > 0) return { type: 'lay', groups: p.pairs.slice(0, k) }; } }
-      if (s.openedAt[seat] !== s.turnNo && h.length > 1) for (const t of h) { const m = this.canAdd(s, t); if (m >= 0) return { type: 'add', tile: t, meld: m }; }
+      for (const t of h) { const sw = this.canSwap(s, t); if (sw) return { type: 'add', tile: t, meld: sw.meld }; }
+      if (me === 'seri') { const g = solveGroups(h, x, 'count'); let gs = g.groups.filter(q => q.length); if (s.mustUse !== null) gs.sort((p, q) => q.includes(s.mustUse) - p.includes(s.mustUse)); while (gs.flat().length >= h.length && gs.length) gs.pop(); if (gs.length) return { type: 'lay', groups: gs }; }
+      if (me === 'cift') { const p = solvePairs(h, x); const k = Math.min(p.pairs.length, Math.floor((h.length - 1) / 2)); if (k > 0) return { type: 'lay', groups: p.pairs.slice(0, k) }; }
+      if (h.length > 1) for (const t of h) { if (isWild(t, x)) continue; const m = this.canAdd(s, t); if (m >= 0) return { type: 'add', tile: t, meld: m }; }
     }
     if (s.mustUse !== null) return { type: 'giveBack' };
     const dis = this.botDiscard(s, seat, t => s.melds.length && this.canAdd(s, t) >= 0);
@@ -984,7 +1091,7 @@ function renderGames() {
 }
 renderGames();
 function needName() { if (!ME.name) { ME.name = 'Oyuncu' + (Math.random() * 90 + 10 | 0); $('myName').value = ME.name; LS.set('name', ME.name); } }
-function defOpts(g) { const o = {}; const E = GAMES[g]; for (const k in E.opts) o[k] = (OPTS[g] && OPTS[g][k] !== undefined) ? OPTS[g][k] : E.opts[k].def; o.players = (OPTS[g] && OPTS[g].players) || E.players[E.players.length - 1]; return o; }
+function defOpts(g) { const o = { timer: LS.get('timer', 30) }; const E = GAMES[g]; for (const k in E.opts) o[k] = (OPTS[g] && OPTS[g][k] !== undefined) ? OPTS[g][k] : E.opts[k].def; o.players = (OPTS[g] && OPTS[g].players) || E.players[E.players.length - 1]; return o; }
 
 /* ===================== OTURUM ===================== */
 const APP = { mode: null, game: PICK, opts: {}, seats: [], players: [], mySeat: 0, s: null, v: null, H: null, C: null, timer: null, started: false, lastSeen: {}, pingT: null, lastHost: 0 };
@@ -1049,8 +1156,9 @@ function renderLobby() {
   let oh = '';
   if (E.players.length > 1) oh += optSel('players', 'Oyuncu', E.players, v => v + ' kişi');
   for (const k in E.opts) oh += optSel(k, E.opts[k].label, E.opts[k].values, E.opts[k].fmt);
+  oh += optSel('timer', 'Hamle süresi', [0, 20, 30, 60], v => v ? v + ' sn' : 'Yok');
   $('lobOpts').innerHTML = oh;
-  document.querySelectorAll('#lobOpts select').forEach(s => s.onchange = () => { APP.opts[s.dataset.k] = +s.value; OPTS[APP.game] = Object.assign({}, APP.opts); LS.set('opts', OPTS); hostLobbyBroadcast(); });
+  document.querySelectorAll('#lobOpts select').forEach(s => s.onchange = () => { APP.opts[s.dataset.k] = +s.value; if (s.dataset.k === 'timer') LS.set('timer', +s.value); OPTS[APP.game] = Object.assign({}, APP.opts); LS.set('opts', OPTS); hostLobbyBroadcast(); });
   $('bStart').style.display = host ? '' : 'none';
 }
 function optSel(k, label, vals, fmt) { const host = APP.mode === 'host'; const cur = APP.opts[k];
@@ -1112,7 +1220,7 @@ function guestMsg(m) {
     APP.game = m.game; APP.players = m.players; APP.mySeat = m.you; APP.opts = m.opts || APP.opts;
     if (!APP.started) { APP.started = true; enterTable(); }
     if ($('lobby').classList.contains('on')) enterTable();
-    renderView(m.v); return;
+    APP.deadline = m.tl ? Date.now() + m.tl : 0; renderView(m.v); return;
   }
   if (m.t === 'err') { toast(m.msg); return; }
   if (m.t === 'chat') { addChat(m.name, m.text); return; }
@@ -1135,9 +1243,15 @@ function startGame() {
 function enterTable() { $('mSum').classList.remove('on'); clearScene(); RACK.slots = Array(32).fill(null); RACK.sel = null; show('table'); fitBoard(); }
 function hostChanged() {
   const E = GAMES[APP.game], s = APP.s; if (!s) return;
-  if (APP.mode === 'host' && APP.H) APP.players.forEach((p, i) => { if (p.peer && p.online !== false) APP.H.send(p.peer, { t: 'view', v: E.view(s, i), players: pubPlayers(), you: i, game: APP.game, opts: APP.opts }); });
+  clearTimeout(APP.timer); clearTimeout(APP.turnT); APP.deadline = 0;
+  const ts = E.auto(s) == null && !s.over ? E.turnSeat(s) : -1, tp = ts >= 0 ? APP.players[ts] : null;
+  if (tp && !tp.bot && tp.online !== false && APP.mode === 'host' && APP.opts.timer > 0) {
+    const ms = APP.opts.timer * 1000 + (E.kind === 'tiles' ? 5000 : 0); APP.deadline = Date.now() + ms;
+    APP.turnT = setTimeout(() => { if (APP.s !== s || E.turnSeat(s) !== ts) return; botMove(E, s, ts); sysChat(`${tp.name} süresini doldurdu, hamlesini bot yaptı`); hostChanged(); }, ms);
+  }
+  const tl = APP.deadline ? APP.deadline - Date.now() : 0;
+  if (APP.mode === 'host' && APP.H) APP.players.forEach((p, i) => { if (p.peer && p.online !== false) APP.H.send(p.peer, { t: 'view', v: E.view(s, i), players: pubPlayers(), you: i, game: APP.game, opts: APP.opts, tl }); });
   renderView(E.view(s, APP.mySeat));
-  clearTimeout(APP.timer);
   const d = E.auto(s);
   if (d != null) { APP.timer = setTimeout(() => { if (APP.s !== s) return; E.advance(s); hostChanged(); }, d); return; }
   if (s.over) return;
@@ -1186,6 +1300,23 @@ function addChat(name, text) {
   if (name) { const i = APP.players.findIndex(p => p.name === name); if (i >= 0) BUBBLE[i] = { text, until: Date.now() + 4500 }; if (APP.v) renderPlates(APP.v); setTimeout(() => APP.v && renderPlates(APP.v), 4600); if (name !== ME.name) snd('turn'); }
 }
 const BUBBLE = {};
+
+/* ---- kurallar ---- */
+let RULE_TAB = 'okey101';
+function openRules(g) {
+  RULE_TAB = g && RULES_HTML[g] ? g : RULE_TAB;
+  $('rTabs').innerHTML = GAME_ORDER.map(k => `<button class="sm ${k === RULE_TAB ? '' : 'ghost'}" data-g="${k}">${GAMES[k].icon} ${GAMES[k].name}</button>`).join('') + `<button class="sm ${RULE_TAB === '_common' ? '' : 'ghost'}" data-g="_common">⚙ Ortak</button>`;
+  document.querySelectorAll('#rTabs button').forEach(b => b.onclick = () => openRules(b.dataset.g));
+  $('rBody').innerHTML = RULES_HTML[RULE_TAB]; $('rBody').scrollTop = 0; $('mRules').classList.add('on');
+}
+$('rClose').onclick = () => $('mRules').classList.remove('on');
+$('bRulesHome').onclick = () => openRules(PICK);
+$('bRules').onclick = () => openRules(APP.game);
+(function () { // indirilebilir kural dosyası (markdown) — sayfa içeriğinden üretilir
+  const toMd = h => h.replace(/<h3>(.*?)<\/h3>/g, '\n## $1\n').replace(/<h4>(.*?)<\/h4>/g, '\n### $1\n').replace(/<li>(.*?)<\/li>/g, '- $1\n').replace(/<tr>(.*?)<\/tr>/g, (m, r) => '| ' + r.replace(/<\/t[hd]><t[hd]>/g, ' | ').replace(/<\/?t[hd]>/g, '') + ' |\n').replace(/<p>(.*?)<\/p>/g, '$1\n\n').replace(/<b>(.*?)<\/b>/g, '**$1**').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  const md = '# KIRAATHANE — Oyun Kuralları\n' + GAME_ORDER.map(g => toMd(RULES_HTML[g])).join('\n') + toMd(RULES_HTML._common);
+  $('rDl').href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+})();
 
 /* ===================== 3D SAHNE ===================== */
 const BOARD = $('board');
@@ -1353,7 +1484,7 @@ function renderMelds(v) {
     const el = put('meld' + i, mkDiv('meldBox'), T(cx, cy, 2, 0));
     const html = m.ids.map(id => `<div class="tile small"><div class="f">${tileFace(id, x)}</div></div>`).join('');
     if (el._h !== html) { el.innerHTML = html; el._h = html; }
-    el.style.borderBottomColor = SEATCOL[m.owner]; el.classList.toggle('target', tgt && m.type !== 'pair' && !!validGroup(m.ids.concat([RACK.sel]), x));
+    el.style.borderBottomColor = SEATCOL[m.owner]; el.classList.toggle('target', tgt && m.type !== 'pair' && (!!validGroup(m.ids.concat([RACK.sel]), x) || (!isWild(RACK.sel, x) && wildSlots(m.ids, x).some(w => { const e = effT(RACK.sel, x); return w.c === e.c && w.n === e.n; }))));
     el.onclick = () => { if (RACK.sel === null) return toast('Önce ıstakadan işlenecek taşı seç'); sendAct({ type: 'add', tile: RACK.sel, meld: i }); RACK.sel = null; };
     cx += w + 10;
   });
@@ -1405,7 +1536,7 @@ function renderRack(v) {
     const opened = v.opened[APP.mySeat];
     if (opened === 'cift') info = `Çift açtın · dizili çift: ${gs.filter(g => validPair(g, x)).length}`;
     else { const vg = gs.map(g => validGroup(g, x)).filter(Boolean); const tot = sum(vg.map(q => q.value)); const pr = gs.filter(g => validPair(g, x)).length;
-      info = opened ? `Açtın ✔ · dizili per: ${vg.length}` : `Dizili per toplamı: <b style="color:${tot >= 101 ? '#7fd88e' : '#f7d77d'}">${tot}</b>/101 · çift: ${pr}/5`; }
+      info = opened ? `Açtın ✔ · dizili per: ${vg.length}` : `Dizili per toplamı: <b style="color:${tot >= v.need.seri ? '#7fd88e' : '#f7d77d'}">${tot}</b>/${v.need.seri} · çift: ${pr}/${v.need.cift}`; }
   } else { const n = sum(gs.filter(g => validGroup(g, x)).map(g => g.length)); const pr = gs.filter(g => validPair(g, x)).length; info = `Perde: ${n}/14 taş · çift: ${pr}/7`; }
   info += ` · Okey: <span class="${'c' + x.okC}" style="font-weight:800">${x.okN}</span>`;
   $('rackInfo').innerHTML = info;
@@ -1440,19 +1571,28 @@ function renderPlates(v) {
   let h = '';
   for (let s = 0; s < v.n; s++) {
     const rel = relOf(s, v), p = APP.players[s] || { name: '?', av: '❔' }; let extra = '';
-    if (v.g === 'batak') { const b = v.bids[s]; extra = v.phase === 'bid' || v.bidder < 0 ? (b === 'pass' ? 'Pas' : b ? 'İhale ' + b : '') : (s === v.bidder ? `İhale ${v.curBid} · ` : '') + `${v.tricks[s]} el`; }
+    if (v.g === 'batak') { const b = v.bids[s];
+      if (v.mode === 2) extra = (b ? `Söz ${b}` : '') + (v.phase !== 'bid' ? ` · ${v.tricks[s]} el` : '');
+      else extra = v.phase === 'bid' || v.bidder < 0 ? (b === 'pass' ? 'Pas' : b ? 'İhale ' + b : '') : (s === v.bidder ? `İhale ${v.curBid} · ` : '') + `${v.tricks[s]} el`; }
     if (v.g === 'okey101') extra = (v.opened[s] ? (v.opened[s] === 'cift' ? '✔ Çift açtı' : '✔ Açtı') : 'Açmadı') + (v.pen[s] ? ` · ceza ${v.pen[s]}` : '');
     if (v.g === 'pisti') extra = `${v.counts[s]} kart`;
     const b = BUBBLE[s] && BUBBLE[s].until > Date.now() ? `<div class="bub">${esc(BUBBLE[s].text)}</div>` : '';
-    h += `<div class="plate p${rel} ${v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? 'turn' : ''} ${p.online === false ? 'off' : ''}">${b}<div class="av">${p.av}</div><div><div class="nm" style="color:${SEATCOL[s]}">${esc(p.name)}${p.online === false ? ' (koptu)' : ''}</div><div class="sc">Puan: <b>${v.scores[s]}</b></div><div class="bd">${extra}</div></div></div>`;
+    const tmTag = v.teams ? `<span class="tm">Takım ${s % 2 + 1}</span>` : '';
+    const clk = APP.deadline && v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? `<div class="clock" data-clock="1"></div>` : '';
+    h += `<div class="plate p${rel} ${v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? 'turn' : ''} ${p.online === false ? 'off' : ''}">${b}${clk}<div class="av">${p.av}</div><div><div class="nm" style="color:${SEATCOL[s]}">${esc(p.name)}${p.online === false ? ' (koptu)' : ''}${tmTag}</div><div class="sc">Puan: <b>${v.scores[s]}</b></div><div class="bd">${extra}</div></div></div>`;
   }
-  $('plates').innerHTML = h;
+  $('plates').innerHTML = h; tickClock();
 }
+function tickClock() { const el = document.querySelector('[data-clock]'); if (!el) return; const r = Math.max(0, Math.ceil((APP.deadline - Date.now()) / 1000)); el.textContent = '⏱ ' + r; el.classList.toggle('ok', r > 10); }
+setInterval(tickClock, 500);
 function renderInfo(v) {
   const E = GAMES[v.g]; let h = `<div class="gn">${E.icon} ${E.name}</div>`;
-  if (v.g === 'pisti') h += `${v.round}. el · ${v.target} sayıya`;
+  if (v.g === 'pisti') h += `${v.round}. el · ${v.target} sayıya` + (v.teams ? ' · Eşli' : '');
+  else if (v.g === 'okey') h += `${v.round}. el · ${v.start}'den düşme`;
   else h += `${v.round}/${v.rounds}. el`;
-  if (v.g === 'batak' && v.trump >= 0) h += `<br>Koz: <b style="font-size:20px;color:${v.trump === 1 || v.trump === 2 ? '#ff8a80' : '#fff'}">${SUITS[v.trump]}</b> ${SUIT_NAMES[v.trump]} · İhale: <b>${v.curBid}</b> (${esc(nameOf(v.bidder))})`;
+  if (v.g === 'batak') h += ' · ' + ['İhaleli', 'Eşli ihaleli', 'Koz Maça'][v.mode] + (v.scoring ? ' · ×10' : '');
+  if (v.g === 'okey101') h += ` · ${v.katla ? 'Katlamalı' : 'Katlamasız'} · açış: <b>${v.need.seri}</b> / <b>${v.need.cift}</b> çift`;
+  if (v.g === 'batak' && v.trump >= 0) h += `<br>Koz: <b style="font-size:20px;color:${v.trump === 1 || v.trump === 2 ? '#ff8a80' : '#fff'}">${SUITS[v.trump]}</b> ${SUIT_NAMES[v.trump]}` + (v.mode !== 2 ? ` · İhale: <b>${v.curBid}</b> (${esc(nameOf(v.bidder))})` : '');
   if (E.kind === 'tiles') h += `<br>Okey taşı: <b class="c${v.x.okC}" style="font-size:18px;background:#fffaf0;padding:0 6px;border-radius:4px">${v.x.okN}</b> (${TCOL[v.x.okC]}) · ★ sahte okey`;
   if (APP.mode === 'host' && APP.H) h += `<br><span class="muted">Oda: <b>${APP.H.code}</b></span>`;
   $('info').innerHTML = h;
@@ -1464,7 +1604,9 @@ function renderActions(v) {
   if (v.phase === 'roundEnd') s = 'El bitti, yeni el birazdan…'; else if (v.phase === 'over') s = 'Oyun bitti';
   else if (v.phase === 'trickEnd') s = `${esc(nameOf(v.trickWinner))} eli aldı`;
   if (v.g === 'batak') {
-    if (v.phase === 'bid') { s = myTurn ? 'İhale sırası sende' : `${tn} ihale düşünüyor…`;
+    if (v.phase === 'bid' && v.mode === 2) { s = myTurn ? 'Koz maça — kaç el alacaksın?' : `${tn} sözünü düşünüyor…`;
+      if (myTurn) for (let b = 1; b <= 13; b++) A.appendChild(btn(String(b), () => sendAct({ type: 'bid', bid: b }))); }
+    else if (v.phase === 'bid') { s = myTurn ? 'İhale sırası sende' : `${tn} ihale düşünüyor…`;
       if (myTurn) { A.appendChild(btn('Pas', () => sendAct({ type: 'bid', bid: 'pass' }), 'ghost')); for (let b = Math.max(v.minBid, v.curBid + 1); b <= Math.min(13, Math.max(v.minBid, v.curBid + 1) + 6); b++) A.appendChild(btn(String(b), () => sendAct({ type: 'bid', bid: b }))); } }
     else if (v.phase === 'trump') { s = myTurn ? 'İhale sende! Kozu seç' : `${tn} kozu seçiyor…`; if (myTurn) [0, 1, 2, 3].forEach(su => A.appendChild(btn(`<span style="font-size:20px;color:${su === 1 || su === 2 ? '#b71c1c' : '#111'}">${SUITS[su]}</span> ${SUIT_NAMES[su]}`, () => sendAct({ type: 'trump', suit: su })))); }
     else if (v.phase === 'play') s = myTurn ? 'Sıra sende — kart oyna' : `${tn} oynuyor…`;
@@ -1472,6 +1614,7 @@ function renderActions(v) {
   if (v.g === 'pisti' && v.phase === 'play') s = myTurn ? 'Sıra sende — kart at' : `${tn} oynuyor…`;
   if (GAMES[v.g].kind === 'tiles' && (v.phase === 'draw' || v.phase === 'discard')) {
     const is101 = v.g === 'okey101';
+    if (v.canShow) A.appendChild(btn('🎯 Gösterge Yap', () => sendAct({ type: 'gosterge' }), 'red'));
     if (myTurn && v.phase === 'draw') { s = 'Sıra sende — ortadan çek ya da soldakini al'; A.appendChild(btn('⬇ Ortadan Çek', () => sendAct({ type: 'draw', from: 'pile' }), 'green')); const ls = (APP.mySeat + 3) % 4; if (v.dcount[ls] && !(is101 && v.noTake)) A.appendChild(btn('⬅ Yandan Al', () => sendAct({ type: 'draw', from: 'left' }))); }
     else if (myTurn) {
       s = is101 && v.mustUse !== null ? 'Yandan aldığın taşı (kırmızı) bu turda kullanmalısın' : 'Bir taş seç ve at' + (is101 ? '' : ' ya da bitir');
@@ -1484,7 +1627,7 @@ function renderActions(v) {
           A.appendChild(btn('Çift Aç', () => sendAct({ type: 'open', kind: 'cift', groups: gs.filter(g => validPair(g, x)) }), 'red'));
         } else {
           A.appendChild(btn('Per İndir', () => { const gg = op === 'cift' ? gs.filter(g => validPair(g, x)) : gs.filter(g => validGroup(g, x)); if (!gg.length) return toast('Istakada yan yana dizili geçerli per yok'); sendAct({ type: 'lay', groups: gg }); }));
-          if (v.canAddNow) A.appendChild(btn('İşle', () => { if (RACK.sel === null) return toast('İşlenecek taşı seç, sonra masadaki pere tıkla'); const m = v.melds.findIndex(m => m.type !== 'pair' && validGroup(m.ids.concat([RACK.sel]), x)); if (m < 0) return toast('Bu taş masadaki hiçbir pere uymuyor'); sendAct({ type: 'add', tile: RACK.sel, meld: m }); RACK.sel = null; }));
+          if (v.canAddNow) A.appendChild(btn('İşle / Okey Al', () => { if (RACK.sel === null) return toast('İşlenecek taşı seç, sonra masadaki pere tıkla'); const e = effT(RACK.sel, x); let m = isWild(RACK.sel, x) ? -1 : v.melds.findIndex(m => m.type !== 'pair' && wildSlots(m.ids, x).some(w => w.c === e.c && w.n === e.n)); if (m < 0) m = v.melds.findIndex(m => m.type !== 'pair' && validGroup(m.ids.concat([RACK.sel]), x)); if (m < 0) return toast('Bu taş masadaki hiçbir pere uymuyor'); sendAct({ type: 'add', tile: RACK.sel, meld: m }); RACK.sel = null; }));
         }
         if (v.mustUse !== null) A.appendChild(btn('↩ Geri Ver', () => sendAct({ type: 'giveBack' }), 'ghost'));
       }
@@ -1505,7 +1648,8 @@ function showSummary(v) {
     if (v.reveal && v.reveal[r.seat] && v.reveal[r.seat].length) h += `<tr><td colspan="9"><div class="revealRow">${v.reveal[r.seat].map(t => { const q = tile(t); return `<span class="mt ${q.fake ? '' : 'c' + q.c}">${q.fake ? '★' : q.n}</span>`; }).join('')}</div></td></tr>`;
   }
   h += '</table>';
-  if (v.phase === 'over') h = `<p style="text-align:center;font-size:20px;margin-bottom:12px">🏆 Kazanan: <b style="color:#f7d77d">${esc(nameOf(v.winner))}</b></p>` + h;
+  const wn = v.teams && v.winTeam >= 0 ? `Takım ${v.winTeam + 1} (${esc(nameOf(v.winTeam))} & ${esc(nameOf(v.winTeam + 2))})` : esc(nameOf(v.winner));
+  if (v.phase === 'over') h = `<p style="text-align:center;font-size:20px;margin-bottom:12px">🏆 Kazanan: <b style="color:#f7d77d">${wn}</b></p>` + h;
   else h += '<p class="muted" style="text-align:center;margin-top:10px">Yeni el birkaç saniye içinde başlayacak…</p>';
   $('sumB').innerHTML = h; const B = $('sumBtns'); B.innerHTML = '';
   if (v.phase === 'over') {

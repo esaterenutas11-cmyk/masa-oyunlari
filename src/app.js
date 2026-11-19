@@ -45,7 +45,7 @@ function renderGames() {
 }
 renderGames();
 function needName() { if (!ME.name) { ME.name = 'Oyuncu' + (Math.random() * 90 + 10 | 0); $('myName').value = ME.name; LS.set('name', ME.name); } }
-function defOpts(g) { const o = {}; const E = GAMES[g]; for (const k in E.opts) o[k] = (OPTS[g] && OPTS[g][k] !== undefined) ? OPTS[g][k] : E.opts[k].def; o.players = (OPTS[g] && OPTS[g].players) || E.players[E.players.length - 1]; return o; }
+function defOpts(g) { const o = { timer: LS.get('timer', 30) }; const E = GAMES[g]; for (const k in E.opts) o[k] = (OPTS[g] && OPTS[g][k] !== undefined) ? OPTS[g][k] : E.opts[k].def; o.players = (OPTS[g] && OPTS[g].players) || E.players[E.players.length - 1]; return o; }
 
 /* ===================== OTURUM ===================== */
 const APP = { mode: null, game: PICK, opts: {}, seats: [], players: [], mySeat: 0, s: null, v: null, H: null, C: null, timer: null, started: false, lastSeen: {}, pingT: null, lastHost: 0 };
@@ -110,8 +110,9 @@ function renderLobby() {
   let oh = '';
   if (E.players.length > 1) oh += optSel('players', 'Oyuncu', E.players, v => v + ' kişi');
   for (const k in E.opts) oh += optSel(k, E.opts[k].label, E.opts[k].values, E.opts[k].fmt);
+  oh += optSel('timer', 'Hamle süresi', [0, 20, 30, 60], v => v ? v + ' sn' : 'Yok');
   $('lobOpts').innerHTML = oh;
-  document.querySelectorAll('#lobOpts select').forEach(s => s.onchange = () => { APP.opts[s.dataset.k] = +s.value; OPTS[APP.game] = Object.assign({}, APP.opts); LS.set('opts', OPTS); hostLobbyBroadcast(); });
+  document.querySelectorAll('#lobOpts select').forEach(s => s.onchange = () => { APP.opts[s.dataset.k] = +s.value; if (s.dataset.k === 'timer') LS.set('timer', +s.value); OPTS[APP.game] = Object.assign({}, APP.opts); LS.set('opts', OPTS); hostLobbyBroadcast(); });
   $('bStart').style.display = host ? '' : 'none';
 }
 function optSel(k, label, vals, fmt) { const host = APP.mode === 'host'; const cur = APP.opts[k];
@@ -173,7 +174,7 @@ function guestMsg(m) {
     APP.game = m.game; APP.players = m.players; APP.mySeat = m.you; APP.opts = m.opts || APP.opts;
     if (!APP.started) { APP.started = true; enterTable(); }
     if ($('lobby').classList.contains('on')) enterTable();
-    renderView(m.v); return;
+    APP.deadline = m.tl ? Date.now() + m.tl : 0; renderView(m.v); return;
   }
   if (m.t === 'err') { toast(m.msg); return; }
   if (m.t === 'chat') { addChat(m.name, m.text); return; }
@@ -196,9 +197,15 @@ function startGame() {
 function enterTable() { $('mSum').classList.remove('on'); clearScene(); RACK.slots = Array(32).fill(null); RACK.sel = null; show('table'); fitBoard(); }
 function hostChanged() {
   const E = GAMES[APP.game], s = APP.s; if (!s) return;
-  if (APP.mode === 'host' && APP.H) APP.players.forEach((p, i) => { if (p.peer && p.online !== false) APP.H.send(p.peer, { t: 'view', v: E.view(s, i), players: pubPlayers(), you: i, game: APP.game, opts: APP.opts }); });
+  clearTimeout(APP.timer); clearTimeout(APP.turnT); APP.deadline = 0;
+  const ts = E.auto(s) == null && !s.over ? E.turnSeat(s) : -1, tp = ts >= 0 ? APP.players[ts] : null;
+  if (tp && !tp.bot && tp.online !== false && APP.mode === 'host' && APP.opts.timer > 0) {
+    const ms = APP.opts.timer * 1000 + (E.kind === 'tiles' ? 5000 : 0); APP.deadline = Date.now() + ms;
+    APP.turnT = setTimeout(() => { if (APP.s !== s || E.turnSeat(s) !== ts) return; botMove(E, s, ts); sysChat(`${tp.name} süresini doldurdu, hamlesini bot yaptı`); hostChanged(); }, ms);
+  }
+  const tl = APP.deadline ? APP.deadline - Date.now() : 0;
+  if (APP.mode === 'host' && APP.H) APP.players.forEach((p, i) => { if (p.peer && p.online !== false) APP.H.send(p.peer, { t: 'view', v: E.view(s, i), players: pubPlayers(), you: i, game: APP.game, opts: APP.opts, tl }); });
   renderView(E.view(s, APP.mySeat));
-  clearTimeout(APP.timer);
   const d = E.auto(s);
   if (d != null) { APP.timer = setTimeout(() => { if (APP.s !== s) return; E.advance(s); hostChanged(); }, d); return; }
   if (s.over) return;
@@ -247,3 +254,20 @@ function addChat(name, text) {
   if (name) { const i = APP.players.findIndex(p => p.name === name); if (i >= 0) BUBBLE[i] = { text, until: Date.now() + 4500 }; if (APP.v) renderPlates(APP.v); setTimeout(() => APP.v && renderPlates(APP.v), 4600); if (name !== ME.name) snd('turn'); }
 }
 const BUBBLE = {};
+
+/* ---- kurallar ---- */
+let RULE_TAB = 'okey101';
+function openRules(g) {
+  RULE_TAB = g && RULES_HTML[g] ? g : RULE_TAB;
+  $('rTabs').innerHTML = GAME_ORDER.map(k => `<button class="sm ${k === RULE_TAB ? '' : 'ghost'}" data-g="${k}">${GAMES[k].icon} ${GAMES[k].name}</button>`).join('') + `<button class="sm ${RULE_TAB === '_common' ? '' : 'ghost'}" data-g="_common">⚙ Ortak</button>`;
+  document.querySelectorAll('#rTabs button').forEach(b => b.onclick = () => openRules(b.dataset.g));
+  $('rBody').innerHTML = RULES_HTML[RULE_TAB]; $('rBody').scrollTop = 0; $('mRules').classList.add('on');
+}
+$('rClose').onclick = () => $('mRules').classList.remove('on');
+$('bRulesHome').onclick = () => openRules(PICK);
+$('bRules').onclick = () => openRules(APP.game);
+(function () { // indirilebilir kural dosyası (markdown) — sayfa içeriğinden üretilir
+  const toMd = h => h.replace(/<h3>(.*?)<\/h3>/g, '\n## $1\n').replace(/<h4>(.*?)<\/h4>/g, '\n### $1\n').replace(/<li>(.*?)<\/li>/g, '- $1\n').replace(/<tr>(.*?)<\/tr>/g, (m, r) => '| ' + r.replace(/<\/t[hd]><t[hd]>/g, ' | ').replace(/<\/?t[hd]>/g, '') + ' |\n').replace(/<p>(.*?)<\/p>/g, '$1\n\n').replace(/<b>(.*?)<\/b>/g, '**$1**').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  const md = '# KIRAATHANE — Oyun Kuralları\n' + GAME_ORDER.map(g => toMd(RULES_HTML[g])).join('\n') + toMd(RULES_HTML._common);
+  $('rDl').href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+})();

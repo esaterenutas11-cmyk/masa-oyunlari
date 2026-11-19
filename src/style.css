@@ -146,3 +146,14 @@ body.cardsMode #actions{bottom:auto;top:42%;transform:translate(-50%,-50%)}
 body.tilesMode #actions{bottom:196px}
 body.tilesMode #status{bottom:240px}
 body.tilesMode .p0{bottom:200px}
+
+.rulesPanel{width:min(820px,96vw)}
+.rtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+#rBody{font-size:14.5px;line-height:1.55;max-height:64vh;overflow:auto;padding-right:6px}
+#rBody h3{font:700 24px Georgia,serif;color:#f7d77d;margin:4px 0 8px}#rBody h4{color:#f7d77d;margin:14px 0 6px;font-size:16px}
+#rBody ul{padding-left:20px;margin:4px 0}#rBody li{margin:3px 0}#rBody p{margin:6px 0}
+table.rtbl{border-collapse:collapse;margin:8px 0;width:100%;font-size:13.5px}table.rtbl td,table.rtbl th{border:1px solid #ffffff22;padding:6px 8px;text-align:left}table.rtbl th{background:#f7d77d22;color:#f7d77d}
+a.dl{display:inline-block;padding:10px 16px;border-radius:10px;background:#ffffff14;color:#f3ead7;text-decoration:none;font-weight:600;box-shadow:inset 0 0 0 1px #ffffff2a}
+.plate .tm{font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;background:#ffffff22}
+.plate .clock{position:absolute;top:-8px;right:-6px;background:#c62828;color:#fff;font-weight:800;font-size:12px;border-radius:12px;padding:2px 7px;box-shadow:0 2px 6px #0008}
+.plate .clock.ok{background:#2e7d32}

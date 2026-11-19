@@ -164,7 +164,7 @@ function renderMelds(v) {
     const el = put('meld' + i, mkDiv('meldBox'), T(cx, cy, 2, 0));
     const html = m.ids.map(id => `<div class="tile small"><div class="f">${tileFace(id, x)}</div></div>`).join('');
     if (el._h !== html) { el.innerHTML = html; el._h = html; }
-    el.style.borderBottomColor = SEATCOL[m.owner]; el.classList.toggle('target', tgt && m.type !== 'pair' && !!validGroup(m.ids.concat([RACK.sel]), x));
+    el.style.borderBottomColor = SEATCOL[m.owner]; el.classList.toggle('target', tgt && m.type !== 'pair' && (!!validGroup(m.ids.concat([RACK.sel]), x) || (!isWild(RACK.sel, x) && wildSlots(m.ids, x).some(w => { const e = effT(RACK.sel, x); return w.c === e.c && w.n === e.n; }))));
     el.onclick = () => { if (RACK.sel === null) return toast('Önce ıstakadan işlenecek taşı seç'); sendAct({ type: 'add', tile: RACK.sel, meld: i }); RACK.sel = null; };
     cx += w + 10;
   });
@@ -216,7 +216,7 @@ function renderRack(v) {
     const opened = v.opened[APP.mySeat];
     if (opened === 'cift') info = `Çift açtın · dizili çift: ${gs.filter(g => validPair(g, x)).length}`;
     else { const vg = gs.map(g => validGroup(g, x)).filter(Boolean); const tot = sum(vg.map(q => q.value)); const pr = gs.filter(g => validPair(g, x)).length;
-      info = opened ? `Açtın ✔ · dizili per: ${vg.length}` : `Dizili per toplamı: <b style="color:${tot >= 101 ? '#7fd88e' : '#f7d77d'}">${tot}</b>/101 · çift: ${pr}/5`; }
+      info = opened ? `Açtın ✔ · dizili per: ${vg.length}` : `Dizili per toplamı: <b style="color:${tot >= v.need.seri ? '#7fd88e' : '#f7d77d'}">${tot}</b>/${v.need.seri} · çift: ${pr}/${v.need.cift}`; }
   } else { const n = sum(gs.filter(g => validGroup(g, x)).map(g => g.length)); const pr = gs.filter(g => validPair(g, x)).length; info = `Perde: ${n}/14 taş · çift: ${pr}/7`; }
   info += ` · Okey: <span class="${'c' + x.okC}" style="font-weight:800">${x.okN}</span>`;
   $('rackInfo').innerHTML = info;
@@ -251,19 +251,28 @@ function renderPlates(v) {
   let h = '';
   for (let s = 0; s < v.n; s++) {
     const rel = relOf(s, v), p = APP.players[s] || { name: '?', av: '❔' }; let extra = '';
-    if (v.g === 'batak') { const b = v.bids[s]; extra = v.phase === 'bid' || v.bidder < 0 ? (b === 'pass' ? 'Pas' : b ? 'İhale ' + b : '') : (s === v.bidder ? `İhale ${v.curBid} · ` : '') + `${v.tricks[s]} el`; }
+    if (v.g === 'batak') { const b = v.bids[s];
+      if (v.mode === 2) extra = (b ? `Söz ${b}` : '') + (v.phase !== 'bid' ? ` · ${v.tricks[s]} el` : '');
+      else extra = v.phase === 'bid' || v.bidder < 0 ? (b === 'pass' ? 'Pas' : b ? 'İhale ' + b : '') : (s === v.bidder ? `İhale ${v.curBid} · ` : '') + `${v.tricks[s]} el`; }
     if (v.g === 'okey101') extra = (v.opened[s] ? (v.opened[s] === 'cift' ? '✔ Çift açtı' : '✔ Açtı') : 'Açmadı') + (v.pen[s] ? ` · ceza ${v.pen[s]}` : '');
     if (v.g === 'pisti') extra = `${v.counts[s]} kart`;
     const b = BUBBLE[s] && BUBBLE[s].until > Date.now() ? `<div class="bub">${esc(BUBBLE[s].text)}</div>` : '';
-    h += `<div class="plate p${rel} ${v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? 'turn' : ''} ${p.online === false ? 'off' : ''}">${b}<div class="av">${p.av}</div><div><div class="nm" style="color:${SEATCOL[s]}">${esc(p.name)}${p.online === false ? ' (koptu)' : ''}</div><div class="sc">Puan: <b>${v.scores[s]}</b></div><div class="bd">${extra}</div></div></div>`;
+    const tmTag = v.teams ? `<span class="tm">Takım ${s % 2 + 1}</span>` : '';
+    const clk = APP.deadline && v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? `<div class="clock" data-clock="1"></div>` : '';
+    h += `<div class="plate p${rel} ${v.turn === s && !['roundEnd', 'over', 'trickEnd'].includes(v.phase) ? 'turn' : ''} ${p.online === false ? 'off' : ''}">${b}${clk}<div class="av">${p.av}</div><div><div class="nm" style="color:${SEATCOL[s]}">${esc(p.name)}${p.online === false ? ' (koptu)' : ''}${tmTag}</div><div class="sc">Puan: <b>${v.scores[s]}</b></div><div class="bd">${extra}</div></div></div>`;
   }
-  $('plates').innerHTML = h;
+  $('plates').innerHTML = h; tickClock();
 }
+function tickClock() { const el = document.querySelector('[data-clock]'); if (!el) return; const r = Math.max(0, Math.ceil((APP.deadline - Date.now()) / 1000)); el.textContent = '⏱ ' + r; el.classList.toggle('ok', r > 10); }
+setInterval(tickClock, 500);
 function renderInfo(v) {
   const E = GAMES[v.g]; let h = `<div class="gn">${E.icon} ${E.name}</div>`;
-  if (v.g === 'pisti') h += `${v.round}. el · ${v.target} sayıya`;
+  if (v.g === 'pisti') h += `${v.round}. el · ${v.target} sayıya` + (v.teams ? ' · Eşli' : '');
+  else if (v.g === 'okey') h += `${v.round}. el · ${v.start}'den düşme`;
   else h += `${v.round}/${v.rounds}. el`;
-  if (v.g === 'batak' && v.trump >= 0) h += `<br>Koz: <b style="font-size:20px;color:${v.trump === 1 || v.trump === 2 ? '#ff8a80' : '#fff'}">${SUITS[v.trump]}</b> ${SUIT_NAMES[v.trump]} · İhale: <b>${v.curBid}</b> (${esc(nameOf(v.bidder))})`;
+  if (v.g === 'batak') h += ' · ' + ['İhaleli', 'Eşli ihaleli', 'Koz Maça'][v.mode] + (v.scoring ? ' · ×10' : '');
+  if (v.g === 'okey101') h += ` · ${v.katla ? 'Katlamalı' : 'Katlamasız'} · açış: <b>${v.need.seri}</b> / <b>${v.need.cift}</b> çift`;
+  if (v.g === 'batak' && v.trump >= 0) h += `<br>Koz: <b style="font-size:20px;color:${v.trump === 1 || v.trump === 2 ? '#ff8a80' : '#fff'}">${SUITS[v.trump]}</b> ${SUIT_NAMES[v.trump]}` + (v.mode !== 2 ? ` · İhale: <b>${v.curBid}</b> (${esc(nameOf(v.bidder))})` : '');
   if (E.kind === 'tiles') h += `<br>Okey taşı: <b class="c${v.x.okC}" style="font-size:18px;background:#fffaf0;padding:0 6px;border-radius:4px">${v.x.okN}</b> (${TCOL[v.x.okC]}) · ★ sahte okey`;
   if (APP.mode === 'host' && APP.H) h += `<br><span class="muted">Oda: <b>${APP.H.code}</b></span>`;
   $('info').innerHTML = h;
@@ -275,7 +284,9 @@ function renderActions(v) {
   if (v.phase === 'roundEnd') s = 'El bitti, yeni el birazdan…'; else if (v.phase === 'over') s = 'Oyun bitti';
   else if (v.phase === 'trickEnd') s = `${esc(nameOf(v.trickWinner))} eli aldı`;
   if (v.g === 'batak') {
-    if (v.phase === 'bid') { s = myTurn ? 'İhale sırası sende' : `${tn} ihale düşünüyor…`;
+    if (v.phase === 'bid' && v.mode === 2) { s = myTurn ? 'Koz maça — kaç el alacaksın?' : `${tn} sözünü düşünüyor…`;
+      if (myTurn) for (let b = 1; b <= 13; b++) A.appendChild(btn(String(b), () => sendAct({ type: 'bid', bid: b }))); }
+    else if (v.phase === 'bid') { s = myTurn ? 'İhale sırası sende' : `${tn} ihale düşünüyor…`;
       if (myTurn) { A.appendChild(btn('Pas', () => sendAct({ type: 'bid', bid: 'pass' }), 'ghost')); for (let b = Math.max(v.minBid, v.curBid + 1); b <= Math.min(13, Math.max(v.minBid, v.curBid + 1) + 6); b++) A.appendChild(btn(String(b), () => sendAct({ type: 'bid', bid: b }))); } }
     else if (v.phase === 'trump') { s = myTurn ? 'İhale sende! Kozu seç' : `${tn} kozu seçiyor…`; if (myTurn) [0, 1, 2, 3].forEach(su => A.appendChild(btn(`<span style="font-size:20px;color:${su === 1 || su === 2 ? '#b71c1c' : '#111'}">${SUITS[su]}</span> ${SUIT_NAMES[su]}`, () => sendAct({ type: 'trump', suit: su })))); }
     else if (v.phase === 'play') s = myTurn ? 'Sıra sende — kart oyna' : `${tn} oynuyor…`;
@@ -283,6 +294,7 @@ function renderActions(v) {
   if (v.g === 'pisti' && v.phase === 'play') s = myTurn ? 'Sıra sende — kart at' : `${tn} oynuyor…`;
   if (GAMES[v.g].kind === 'tiles' && (v.phase === 'draw' || v.phase === 'discard')) {
     const is101 = v.g === 'okey101';
+    if (v.canShow) A.appendChild(btn('🎯 Gösterge Yap', () => sendAct({ type: 'gosterge' }), 'red'));
     if (myTurn && v.phase === 'draw') { s = 'Sıra sende — ortadan çek ya da soldakini al'; A.appendChild(btn('⬇ Ortadan Çek', () => sendAct({ type: 'draw', from: 'pile' }), 'green')); const ls = (APP.mySeat + 3) % 4; if (v.dcount[ls] && !(is101 && v.noTake)) A.appendChild(btn('⬅ Yandan Al', () => sendAct({ type: 'draw', from: 'left' }))); }
     else if (myTurn) {
       s = is101 && v.mustUse !== null ? 'Yandan aldığın taşı (kırmızı) bu turda kullanmalısın' : 'Bir taş seç ve at' + (is101 ? '' : ' ya da bitir');
@@ -295,7 +307,7 @@ function renderActions(v) {
           A.appendChild(btn('Çift Aç', () => sendAct({ type: 'open', kind: 'cift', groups: gs.filter(g => validPair(g, x)) }), 'red'));
         } else {
           A.appendChild(btn('Per İndir', () => { const gg = op === 'cift' ? gs.filter(g => validPair(g, x)) : gs.filter(g => validGroup(g, x)); if (!gg.length) return toast('Istakada yan yana dizili geçerli per yok'); sendAct({ type: 'lay', groups: gg }); }));
-          if (v.canAddNow) A.appendChild(btn('İşle', () => { if (RACK.sel === null) return toast('İşlenecek taşı seç, sonra masadaki pere tıkla'); const m = v.melds.findIndex(m => m.type !== 'pair' && validGroup(m.ids.concat([RACK.sel]), x)); if (m < 0) return toast('Bu taş masadaki hiçbir pere uymuyor'); sendAct({ type: 'add', tile: RACK.sel, meld: m }); RACK.sel = null; }));
+          if (v.canAddNow) A.appendChild(btn('İşle / Okey Al', () => { if (RACK.sel === null) return toast('İşlenecek taşı seç, sonra masadaki pere tıkla'); const e = effT(RACK.sel, x); let m = isWild(RACK.sel, x) ? -1 : v.melds.findIndex(m => m.type !== 'pair' && wildSlots(m.ids, x).some(w => w.c === e.c && w.n === e.n)); if (m < 0) m = v.melds.findIndex(m => m.type !== 'pair' && validGroup(m.ids.concat([RACK.sel]), x)); if (m < 0) return toast('Bu taş masadaki hiçbir pere uymuyor'); sendAct({ type: 'add', tile: RACK.sel, meld: m }); RACK.sel = null; }));
         }
         if (v.mustUse !== null) A.appendChild(btn('↩ Geri Ver', () => sendAct({ type: 'giveBack' }), 'ghost'));
       }
@@ -316,7 +328,8 @@ function showSummary(v) {
     if (v.reveal && v.reveal[r.seat] && v.reveal[r.seat].length) h += `<tr><td colspan="9"><div class="revealRow">${v.reveal[r.seat].map(t => { const q = tile(t); return `<span class="mt ${q.fake ? '' : 'c' + q.c}">${q.fake ? '★' : q.n}</span>`; }).join('')}</div></td></tr>`;
   }
   h += '</table>';
-  if (v.phase === 'over') h = `<p style="text-align:center;font-size:20px;margin-bottom:12px">🏆 Kazanan: <b style="color:#f7d77d">${esc(nameOf(v.winner))}</b></p>` + h;
+  const wn = v.teams && v.winTeam >= 0 ? `Takım ${v.winTeam + 1} (${esc(nameOf(v.winTeam))} & ${esc(nameOf(v.winTeam + 2))})` : esc(nameOf(v.winner));
+  if (v.phase === 'over') h = `<p style="text-align:center;font-size:20px;margin-bottom:12px">🏆 Kazanan: <b style="color:#f7d77d">${wn}</b></p>` + h;
   else h += '<p class="muted" style="text-align:center;margin-top:10px">Yeni el birkaç saniye içinde başlayacak…</p>';
   $('sumB').innerHTML = h; const B = $('sumBtns'); B.innerHTML = '';
   if (v.phase === 'over') {
